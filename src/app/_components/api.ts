@@ -81,6 +81,20 @@ export const api = {
 
   distributors: () => request<{ distributors: Distributor[] }>("/api/distributors").then((d) => d.distributors),
 
+  createDistributor: (input: { name: string; website: string; payoutWallet: string }) =>
+    request<{ distributor: Distributor }>("/api/distributors", { method: "POST", body: JSON.stringify(input) }).then(
+      (d) => d.distributor,
+    ),
+
+  addProduct: (
+    distributorId: string,
+    input: Pick<Product, "name" | "unitPrice" | "unitSize" | "unit" | "shippingCost" | "leadTimeDays" | "stockQuantity">,
+  ) =>
+    request<{ product: Product }>(`/api/distributors/${encodeURIComponent(distributorId)}/products`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }).then((d) => d.product),
+
   claim: (distributorId: string, payoutWallet: string) =>
     request<{ distributor: Distributor }>(`/api/distributors/${encodeURIComponent(distributorId)}/claim`, {
       method: "POST",

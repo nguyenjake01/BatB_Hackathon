@@ -10,6 +10,9 @@ import { PolicyPanel } from "./PolicyPanel";
 import { TabBar, useHashTab, type Tab } from "@/app/_components/Tabs";
 import { inputClass } from "./styles";
 import { button, label as labelClass } from "@/app/_components/ui";
+import { useAuth } from "@/app/_components/AuthProvider";
+import { distributorIdOf } from "@/lib/supabase";
+import { Onboarding } from "./Onboarding";
 
 type Banner = { kind: "error" | "success"; text: string };
 
@@ -21,7 +24,12 @@ export function DistributorPortal({ paymentsMocked }: { paymentsMocked: boolean 
   const [distributors, setDistributors] = useState<Distributor[] | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string>("");
+  const [pickedId, setPickedId] = useState<string>("");
+  // With accounts on, a distributor sees only the company its account is linked to.
+  // Without Supabase (dev fallback) anyone can pick any distributor, as before.
+  const { enabled, user } = useAuth();
+  const linkedId = distributorIdOf(user);
+  const selectedId = enabled ? (linkedId ?? "") : pickedId;
   const [banner, setBanner] = useState<Banner | null>(null);
 
   const load = useCallback(async () => {
@@ -62,9 +70,13 @@ export function DistributorPortal({ paymentsMocked }: { paymentsMocked: boolean 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
       <header className="mb-10">
-        <h1 className="text-4xl font-normal tracking-[-0.025em] text-stone-900 sm:text-5xl">Distributor portal</h1>
+        <h1 className="text-4xl font-normal tracking-[-0.025em] text-stone-900 sm:text-5xl">
+          {enabled && selected ? selected.name : "Distributor portal"}
+        </h1>
         <p className="mt-3 max-w-2xl text-base text-stone-600">
-          Claim your listings, set prices and stock, tell your agent how far it may negotiate, and see AUSD payments.
+          {enabled && selected
+            ? "Your listings, your negotiation agent, and the AUSD payments you receive."
+            : "Claim your listings, set prices and stock, tell your agent how far it may negotiate, and see AUSD payments."}
         </p>
       </header>
 
@@ -82,39 +94,66 @@ export function DistributorPortal({ paymentsMocked }: { paymentsMocked: boolean 
       )}
 
       <div className="grid grid-cols-1 gap-6">
-        <Panel title="Find your business" description="Every distributor the agent has scraped prices from.">
-          {distributors === null ? (
-            <Loading>Loading distributors…</Loading>
-          ) : distributors.length === 0 ? (
-            loadError ? <NotConnected what="The distributor directory" detail={loadError} /> : <EmptyState>No distributors yet.</EmptyState>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="text-sm">
-                <span className={labelClass}>Distributor</span>
-                <select value={selectedId} onChange={(e) => setSelectedId(e.target.value)} className={inputClass}>
-                  <option value="">Choose your business…</option>
-                  {distributors.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name}
-                      {d.claimed ? " (claimed)" : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {selected && (
-                <ClaimForm
-                  key={selected.id}
-                  distributor={selected}
-                  onClaimed={async (d) => {
-                    report("success", `${d.name} is claimed. Payments now go to your wallet.`);
-                    await load();
-                  }}
-                  onError={(text) => report("error", text)}
-                />
-              )}
-            </div>
-          )}
-        </Panel>
+        {!enabled ? (
+          <Panel title="Find your business" description="Every distributor the agent has scraped prices from.">
+            {distributors === null ? (
+              <Loading>Loading distributors…</Loading>
+            ) : distributors.length === 0 ? (
+              loadError ? <NotConnected what="The distributor directory" detail={loadError} /> : <EmptyState>No distributors yet.</EmptyState>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="text-sm">
+                  <span className={labelClass}>Distributor</span>
+                  <select value={selectedId} onChange={(e) => setPickedId(e.target.value)} className={inputClass}>
+                    <option value="">Choose your business…</option>
+                    {distributors.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name}
+                        {d.claimed ? " (claimed)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {selected && (
+                  <ClaimForm
+                    key={selected.id}
+                    distributor={selected}
+                    onClaimed={async (d) => {
+                      report("success", `${d.name} is claimed. Payments now go to your wallet.`);
+                      await load();
+                    }}
+                    onError={(text) => report("error", text)}
+                  />
+                )}
+              </div>
+            )}
+          </Panel>
+        ) : distributors === null ? (
+          <Loading>Loading your company…</Loading>
+        ) : !selected ? (
+          <Onboarding
+            distributors={distributors}
+            products={products}
+            lostCompany={linkedId !== null}
+            onLinked={async (d) => {
+              report("success", `You're set up as ${d.name}. Payments for your listings now go to your wallet.`);
+              await load();
+            }}
+            onError={(text) => report("error", text)}
+          />
+        ) : (
+          <Panel title="Your company" description={selected.website || "Self-registered distributor"}>
+            <ClaimForm
+              key={selected.id}
+              distributor={selected}
+              onClaimed={async (d) => {
+                report("success", `Payout wallet for ${d.name} updated.`);
+                await load();
+              }}
+              onError={(text) => report("error", text)}
+            />
+          </Panel>
+        )}
 
         {selected && (
           <div className="mt-4 grid gap-6">

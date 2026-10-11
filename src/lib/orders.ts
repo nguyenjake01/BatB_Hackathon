@@ -33,7 +33,10 @@ export async function runAgentAndPropose(): Promise<Order[]> {
   ]);
   const listings = (await Promise.all(inventory.map((item) => getProducts(item.name)))).flat();
   await store.upsertProducts(listings);
-  await store.retainProducts(listings.map((p) => p.id));
+  // Keep scraped listings plus any listing a claimed distributor added itself in the portal.
+  const claimed = new Set((await store.listDistributors()).filter((d) => d.claimed).map((d) => d.id));
+  const ownListings = (await store.listProducts()).filter((p) => claimed.has(p.distributorId)).map((p) => p.id);
+  await store.retainProducts([...listings.map((p) => p.id), ...ownListings]);
   // Read back from the store so distributor edits to claimed listings apply.
   const products = await store.listProducts();
 

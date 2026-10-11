@@ -54,6 +54,8 @@ function Account() {
 
 export function AppHeader() {
   const pathname = usePathname();
+  // With accounts on, each role is locked to its own interface; the switch is only a fallback without sign-in.
+  const { enabled } = useAuth();
   if (pathname === "/login") {
     return (
       <header className="bg-white">
@@ -74,23 +76,25 @@ export function AppHeader() {
           </span>
         </Link>
         <div className="flex shrink-0 items-center gap-3">
-          <nav aria-label="View as" className="flex shrink-0 gap-2 text-sm">
-            {ROLES.map((role) => {
-              const active = role.href === "/" ? pathname === "/" : pathname.startsWith(role.href);
-              return (
-                <Link
-                  key={role.href}
-                  href={role.href}
-                  aria-current={active ? "page" : undefined}
-                  className={`rounded-md px-3 py-1.5 font-semibold transition-colors ${
-                    active ? "bg-stone-800 text-white" : "bg-[#eef1f5] text-stone-900 hover:bg-[#e2e6ec]"
-                  }`}
-                >
-                  {role.label}
-                </Link>
-              );
-            })}
-          </nav>
+          {!enabled && (
+            <nav aria-label="View as" className="flex shrink-0 gap-2 text-sm">
+              {ROLES.map((role) => {
+                const active = role.href === "/" ? pathname === "/" : pathname.startsWith(role.href);
+                return (
+                  <Link
+                    key={role.href}
+                    href={role.href}
+                    aria-current={active ? "page" : undefined}
+                    className={`rounded-md px-3 py-1.5 font-semibold transition-colors ${
+                      active ? "bg-stone-800 text-white" : "bg-[#eef1f5] text-stone-900 hover:bg-[#e2e6ec]"
+                    }`}
+                  >
+                    {role.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          )}
           <Account />
         </div>
       </div>

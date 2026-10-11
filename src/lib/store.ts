@@ -40,6 +40,8 @@ export interface Store {
   listDistributors(): Promise<Distributor[]>;
   getDistributor(id: string): Promise<Distributor | undefined>;
   updateDistributor(id: string, patch: Partial<Omit<Distributor, "id">>): Promise<Distributor | undefined>;
+  /** Adds a distributor that signed up itself (no scraped listings yet). Fails if the id is taken. */
+  createDistributor(distributor: Distributor): Promise<Distributor>;
   /** The distributor's own policy, or `defaultPolicy(id)` if it hasn't set one. */
   getPolicy(distributorId: string): Promise<DistributorPolicy>;
   setPolicy(policy: DistributorPolicy): Promise<DistributorPolicy>;
@@ -183,6 +185,12 @@ class MemoryStore implements Store {
   async getDistributor(id: string) {
     const distributor = this.distributors.get(id);
     return distributor && structuredClone(distributor);
+  }
+
+  async createDistributor(distributor: Distributor) {
+    if (this.distributors.has(distributor.id)) throw new Error(`Distributor ${distributor.id} already exists`);
+    this.distributors.set(distributor.id, structuredClone(distributor));
+    return structuredClone(distributor);
   }
 
   async updateDistributor(id: string, patch: Partial<Omit<Distributor, "id">>) {

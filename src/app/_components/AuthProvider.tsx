@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import { HOME, roleOf, supabase } from "@/lib/supabase";
 
 const PUBLIC_PATHS = ["/login"];
 
@@ -18,7 +18,11 @@ const AuthContext = createContext<AuthState>({ enabled: false, user: null });
 
 export const useAuth = () => useContext(AuthContext);
 
-/** Loads the Supabase session and sends signed-out visitors to /login. */
+/** Each role sees only its own interface: owners the dashboard, distributors the portal. */
+const allowedFor = (role: "owner" | "distributor", pathname: string) =>
+  role === "distributor" ? pathname.startsWith("/distributor") : !pathname.startsWith("/distributor");
+
+/** Loads the Supabase session, sends signed-out visitors to /login, and keeps each role on its own pages. */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null | undefined>(supabase ? undefined : null);
   const pathname = usePathname();
@@ -33,11 +37,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const blocked = supabase !== null && !isPublic && user === null;
+  const wrongRole = supabase !== null && !isPublic && !!user && !allowedFor(roleOf(user), pathname);
   useEffect(() => {
     if (blocked) router.replace("/login");
-  }, [blocked, router]);
+    else if (wrongRole && user) router.replace(HOME[roleOf(user)]);
+  }, [blocked, wrongRole, user, router]);
 
-  const waiting = supabase !== null && !isPublic && !user;
+  const waiting = supabase !== null && !isPublic && (!user || wrongRole);
   return (
     <AuthContext.Provider value={{ enabled: supabase !== null, user }}>
       {waiting ? <p className="animate-pulse py-24 text-center text-sm text-stone-400">Loading…</p> : children}

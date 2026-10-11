@@ -18,5 +18,18 @@ export function roleOf(user: User | null | undefined): Role {
   return user?.user_metadata?.role === "distributor" ? "distributor" : "owner";
 }
 
+/** The distributor company a distributor account manages, once it has claimed or created one. */
+export function distributorIdOf(user: User | null | undefined): string | null {
+  const id = user?.user_metadata?.distributorId;
+  return typeof id === "string" && id ? id : null;
+}
+
+/** Links the signed-in distributor account to its company. */
+export async function linkDistributor(distributorId: string): Promise<void> {
+  if (!supabase) return;
+  const { error } = await supabase.auth.updateUser({ data: { distributorId } });
+  if (error) throw error;
+}
+
 /** Where each role lands after signing in. */
 export const HOME: Record<Role, string> = { owner: "/", distributor: "/distributor" };
