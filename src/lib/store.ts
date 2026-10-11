@@ -78,7 +78,7 @@ export function defaultPolicy(distributorId: string): DistributorPolicy {
   };
 }
 
-const DEFAULT_SETTINGS: AutonomySettings = { mode: "approval", perOrderLimit: 150, weeklyBudget: 600 };
+const DEFAULT_SETTINGS: AutonomySettings = { mode: "approval", perOrderLimit: 250, weeklyBudget: 600 };
 
 const SEED_REQUIREMENTS: RequirementInput[] = [
   { itemName: "Flour", minStockLevel: 150, maxBudget: 300, qualityNotes: "unbleached" },
