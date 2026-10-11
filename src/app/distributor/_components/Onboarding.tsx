@@ -36,7 +36,8 @@ export function Onboarding({
   const [website, setWebsite] = useState("");
   const [wallet, setWallet] = useState("");
   const [saving, setSaving] = useState(false);
-  const walletOk = WALLET_PATTERN.test(wallet.trim());
+  // Payment details are optional at sign-up: payouts can be set up later.
+  const walletOk = wallet.trim() === "" || WALLET_PATTERN.test(wallet.trim());
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -44,8 +45,8 @@ export function Onboarding({
     try {
       const distributor =
         mode === "claim"
-          ? await api.claim(claimId, wallet.trim())
-          : await api.createDistributor({ name: name.trim(), website: website.trim(), payoutWallet: wallet.trim() });
+          ? await api.claim(claimId, wallet.trim() || undefined)
+          : await api.createDistributor({ name: name.trim(), website: website.trim(), payoutWallet: wallet.trim() || undefined });
       await linkDistributor(distributor.id);
       await onLinked(distributor);
     } catch (error) {
@@ -111,9 +112,8 @@ export function Onboarding({
           </>
         )}
         <label>
-          <span className={label}>Payout wallet (Base Sepolia)</span>
+          <span className={label}>Payout wallet (optional)</span>
           <input
-            required
             value={wallet}
             onChange={(e) => setWallet(e.target.value)}
             placeholder="0x…"
@@ -121,7 +121,9 @@ export function Onboarding({
             className={`${input} font-mono`}
           />
           {wallet && !walletOk && <span className="mt-1 block text-xs text-red-700">Enter a 0x address with 40 hex characters.</span>}
-          <span className="mt-1 block text-xs text-stone-500">Buyers&apos; agents pay you here in AUSD.</span>
+          <span className="mt-1 block text-xs text-stone-500">
+            Skip this for now: until you add one, Bizaar holds your payments for you. You can add it later.
+          </span>
         </label>
         <div>
           <button

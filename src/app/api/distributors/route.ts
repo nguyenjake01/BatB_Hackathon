@@ -33,13 +33,14 @@ const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(
 
 /**
  * A distributor that signs up itself rather than claiming a scraped listing. It starts
- * claimed (it owns its listings) with the default agent policy. Body: { name, website?, payoutWallet }.
+ * claimed (it owns its listings) with the default agent policy. Body: { name, website?, payoutWallet? }.
  */
 export async function POST(request: Request) {
   try {
     const { name, website, payoutWallet } = await readJson(request);
     if (typeof name !== "string" || name.trim().length < 2) throw new HttpError(400, "name is required");
-    if (typeof payoutWallet !== "string" || !WALLET.test(payoutWallet)) {
+    // Optional: without a payout wallet, checkout pays the platform's DEMO_DISTRIBUTOR_WALLET.
+    if (payoutWallet !== undefined && payoutWallet !== "" && (typeof payoutWallet !== "string" || !WALLET.test(payoutWallet))) {
       throw new HttpError(400, "payoutWallet must be a 0x-prefixed Base Sepolia address");
     }
     if (website !== undefined && website !== "" && (typeof website !== "string" || !/^https?:\/\//.test(website))) {
@@ -53,7 +54,7 @@ export async function POST(request: Request) {
       name: name.trim(),
       website: typeof website === "string" ? website : "",
       claimed: true,
-      payoutWallet,
+      ...(typeof payoutWallet === "string" && payoutWallet ? { payoutWallet } : {}),
     });
     return Response.json({ distributor }, { status: 201 });
   } catch (error) {

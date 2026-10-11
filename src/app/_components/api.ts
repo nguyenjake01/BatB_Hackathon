@@ -81,7 +81,7 @@ export const api = {
 
   distributors: () => request<{ distributors: Distributor[] }>("/api/distributors").then((d) => d.distributors),
 
-  createDistributor: (input: { name: string; website: string; payoutWallet: string }) =>
+  createDistributor: (input: { name: string; website: string; payoutWallet?: string }) =>
     request<{ distributor: Distributor }>("/api/distributors", { method: "POST", body: JSON.stringify(input) }).then(
       (d) => d.distributor,
     ),
@@ -95,7 +95,7 @@ export const api = {
       body: JSON.stringify(input),
     }).then((d) => d.product),
 
-  claim: (distributorId: string, payoutWallet: string) =>
+  claim: (distributorId: string, payoutWallet?: string) =>
     request<{ distributor: Distributor }>(`/api/distributors/${encodeURIComponent(distributorId)}/claim`, {
       method: "POST",
       body: JSON.stringify({ payoutWallet }),

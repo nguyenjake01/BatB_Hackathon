@@ -199,13 +199,14 @@ function ClaimForm({
 }) {
   const [wallet, setWallet] = useState(distributor.payoutWallet ?? "");
   const [saving, setSaving] = useState(false);
-  const valid = WALLET_PATTERN.test(wallet.trim());
+  // Optional: an empty wallet means payments are held by the platform until one is added.
+  const valid = wallet.trim() === "" ? !distributor.claimed : WALLET_PATTERN.test(wallet.trim());
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     setSaving(true);
     try {
-      await onClaimed(await api.claim(distributor.id, wallet.trim()));
+      await onClaimed(await api.claim(distributor.id, wallet.trim() || undefined));
     } catch (error) {
       onError(`Couldn't claim ${distributor.name}: ${(error as Error).message}`);
     } finally {
@@ -216,7 +217,7 @@ function ClaimForm({
   return (
     <form onSubmit={submit} className="text-sm">
       <label className="block">
-        <span className={labelClass}>Payout wallet (Base Sepolia)</span>
+        <span className={labelClass}>Payout wallet{distributor.payoutWallet ? "" : " (optional)"}</span>
         <input
           value={wallet}
           onChange={(e) => setWallet(e.target.value)}
@@ -236,7 +237,9 @@ function ClaimForm({
         </button>
         <span className="text-xs text-stone-500">
           {distributor.claimed
-            ? "Claimed. AUSD payments go to this wallet."
+            ? distributor.payoutWallet
+              ? "Payments go to this wallet."
+              : "No payout wallet yet: Bizaar holds your payments until you add one."
             : "Unclaimed: payments go to the demo wallet and your agent uses the default policy."}
         </span>
       </div>
