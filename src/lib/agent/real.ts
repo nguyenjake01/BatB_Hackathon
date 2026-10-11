@@ -1,16 +1,17 @@
-// Real agent backed by an LLM.
+// Real agent: the deterministic decision logic of docs/PRD.md section 8, plus an
+// optional LLM pass that rephrases the reasoning (never changes numbers).
 
 import { NotImplementedError } from "@/lib/config";
 import type { PurchasingAgent } from "./index";
 
 export const llmAgent: PurchasingAgent = {
-  async runAgent(inventory, requirements, products) {
-    // TODO(Person 2): Call the LLM (process.env.LLM_API_KEY) to choose orders and write the
-    // reasoning. A good start: run `ruleBasedAgent` from "./mock" for the numbers, then send
-    // its candidates plus the requirements' quality notes to the LLM to confirm the pick and
-    // rewrite the explanation in plain language.
+  async runAgent(ctx) {
+    // TODO(Person 2): Implement PRD section 8 exactly (runway, candidates, landed cost, reorder
+    // rule, quantity caps, signals, negotiateAll from "@/lib/negotiation", pick, savings,
+    // autonomy). Start from `ruleBasedAgent` in "./mock" and fix where it differs from the PRD.
+    // If LLM_API_KEY is set, ask the LLM to rephrase the computed facts; otherwise use the template.
     throw new NotImplementedError(
-      `LLM agent (${inventory.length} items, ${requirements.length} requirements, ${products.length} listings)`,
+      `Agent (${ctx.inventory.length} items, ${ctx.requirements.length} requirements, ${ctx.products.length} listings)`,
       "agent",
     );
   },

@@ -6,6 +6,7 @@ const STATUS_BADGE: Record<OrderStatus, string> = {
   proposed: "bg-sky-100 text-sky-800",
   approved: "bg-indigo-100 text-indigo-800",
   paid: "bg-emerald-100 text-emerald-800",
+  rejected: "bg-stone-100 text-stone-600",
   failed: "bg-red-100 text-red-800",
 };
 
@@ -56,7 +57,7 @@ export function OrderHistoryPanel({ orders, paymentsMocked }: { orders: OrderWit
                 <tr key={order.id}>
                   <td className="whitespace-nowrap px-5 py-2.5 text-stone-600">{dateTime(order.createdAt)}</td>
                   <td className="px-3 py-2.5">
-                    <div className="font-medium text-stone-900">{order.product?.distributor ?? order.productId}</div>
+                    <div className="font-medium text-stone-900">{order.product?.distributorName ?? order.productId}</div>
                     <div className="text-xs text-stone-500">
                       {order.product?.name ?? "Unknown product"} × {order.quantity}
                     </div>

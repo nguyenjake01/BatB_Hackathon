@@ -90,7 +90,7 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
       setBanner(
         warning
           ? { kind: "warning", text: warning }
-          : { kind: "success", text: `Paid ${order.product?.distributor ?? "distributor"}. Purchase logged on-chain.` },
+          : { kind: "success", text: `Paid ${order.product?.distributorName ?? "distributor"}. Purchase logged on-chain.` },
       );
     } catch (error) {
       setBanner({ kind: "error", text: `Approval failed: ${(error as Error).message}` });

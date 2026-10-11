@@ -43,7 +43,7 @@ export function RequirementsPanel({
       itemName: r.itemName,
       minStockLevel: String(r.minStockLevel),
       maxBudget: String(r.maxBudget),
-      qualityNotes: r.qualityNotes,
+      qualityNotes: r.qualityNotes ?? "",
     });
   }
 

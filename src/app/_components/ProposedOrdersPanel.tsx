@@ -47,7 +47,7 @@ export function ProposedOrdersPanel({
               <li key={order.id} className="flex flex-col rounded-lg border border-stone-200 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <div className="font-semibold text-stone-900">{p?.distributor ?? "Unknown distributor"}</div>
+                    <div className="font-semibold text-stone-900">{p?.distributorName ?? "Unknown distributor"}</div>
                     <div className="text-sm text-stone-600">
                       {p ? `${p.name} × ${order.quantity}` : `${order.productId} × ${order.quantity}`}
                     </div>

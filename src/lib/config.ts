@@ -5,7 +5,7 @@
 // overrides the global flag for that module, so each owner can test their real
 // integration while the rest of the app stays on mocks.
 
-export type IntegrationModule = "supply" | "agent" | "payments" | "square";
+export type IntegrationModule = "supply" | "negotiation" | "agent" | "payments" | "square";
 
 function parseFlag(value: string | undefined): boolean | undefined {
   if (value === undefined || value.trim() === "") return undefined;

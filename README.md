@@ -6,6 +6,24 @@ Hackathon tracks: **Context.dev** (web scraping), **Agora AUSD** (agentic paymen
 
 > The repo is a working skeleton. Every integration runs on realistic mock data so all three of us can build in parallel and swap in the real thing independently.
 
+## Start here (team)
+
+| Who | Role | Branch | Task list |
+| --- | --- | --- | --- |
+| **Jake** | Person 1: Supply + Negotiation (Context.dev scraping, signals, distributor agents, negotiation, distributor APIs) | `supply` | [docs/roles/jake-supply-negotiation.md](docs/roles/jake-supply-negotiation.md) |
+| **Jason** | Person 2: Agent + Payments (decision logic, x402 AUSD payments, checkout, PurchaseLog on BSC) | `agent` | [docs/roles/jason-agent-payments.md](docs/roles/jason-agent-payments.md) |
+| **Stanley** | Person 3: Demand + UI (Square sandbox, dashboard, distributor portal, deploy, video, submission) | `ui` | [docs/roles/stanley-demand-ui.md](docs/roles/stanley-demand-ui.md) |
+
+```bash
+git clone https://github.com/nguyenjake01/BatB_Hackathon.git
+cd BatB_Hackathon
+git checkout <your-branch>
+npm install
+cp .env.example .env.local
+```
+
+Then tell your coding agent: "Read CLAUDE.md and start on my role." [CLAUDE.md](CLAUDE.md) maps your branch to your role. **[docs/PRD.md](docs/PRD.md) is the source of truth.** Its section 20 explains how it was reconciled with the Café PRD (archived) and the original setup prompt.
+
 ## Setup
 
 Requires Node.js 22+ and npm.
@@ -40,7 +58,7 @@ npm test
 
 ### Mocks vs. real integrations
 
-`USE_MOCKS=true` (the default) uses mocks everywhere, and `USE_MOCKS=false` uses real integrations everywhere. To test only your own module, add a per-module override such as `USE_MOCKS_SUPPLY=false` (also `_AGENT`, `_PAYMENTS`, `_SQUARE`). Real implementations that aren't written yet throw a clear "not implemented" error, which the API returns as `501`.
+`USE_MOCKS=true` (the default) uses mocks everywhere, and `USE_MOCKS=false` uses real integrations everywhere. To test only your own module, add a per-module override such as `USE_MOCKS_SUPPLY=false` (also `_NEGOTIATION`, `_AGENT`, `_PAYMENTS`, `_SQUARE`). Real implementations that aren't written yet throw a clear "not implemented" error, which the API returns as `501`.
 
 Every spot where a real integration goes is marked `TODO(Person N)`:
 
@@ -52,10 +70,10 @@ git grep -n "TODO(Person"
 
 | Owner | Folders | Mock today → real version |
 | --- | --- | --- |
-| **Person 1: Supply** | `src/lib/supply/` | Mock catalog → Context.dev scraping (`getProducts(itemName)`, `refreshCatalog()`) |
-| **Person 2: Agent + Payments** | `src/lib/agent/`, `src/lib/payments/`, `src/app/api/distributor/checkout/`, `contracts/` | Rule-based agent → LLM-assisted agent; fake hashes → AUSD via x402 on Base Sepolia (`payOrder`) and `PurchaseLog` on BSC Testnet (`logPurchaseOnChain`) |
-| **Person 3: Demand + UI** | `src/lib/square/`, `src/app/` (page, layout, `_components/`) | Mock inventory → Square sandbox Inventory API (`getInventory()`); dashboard UI |
-| **Shared** (tell the team before editing) | `src/types/`, `src/lib/store.ts`, `src/lib/config.ts`, `src/lib/orders.ts`, `src/lib/{units,matching,http,ids}.ts`, `src/app/api/*` routes | Glue code. Keep the route handlers thin and put logic in `src/lib` |
+| **Jake (P1): Supply + Negotiation** | `src/lib/supply/`, `src/lib/negotiation/`, `src/app/api/{supply,signals,negotiations}/`, `src/app/api/distributors/` (except `checkout`) | Mock catalog → Context.dev scraping; mock signals → monitoring + news; negotiation stub → deterministic agent-to-agent negotiation |
+| **Jason (P2): Agent + Payments** | `src/lib/agent/`, `src/lib/payments/`, `src/app/api/distributors/[id]/checkout/`, `src/app/api/{agent,orders,settings}/`, `contracts/` | Rule-based mock → PRD section 8 agent; fake hashes → AUSD via x402 on Base Sepolia and `PurchaseLog` on BSC Testnet |
+| **Stanley (P3): Demand + UI** | `src/lib/square/`, `src/app/` pages, `_components/`, new pages | Mock inventory → Square sandbox; dashboard + distributor portal |
+| **Shared** (tell the team before editing) | `src/types/`, `src/lib/store.ts`, `src/lib/orders.ts`, `src/lib/quotes.ts`, `src/lib/config.ts`, `src/lib/{units,matching,http,ids}.ts` | Glue code. Keep route handlers thin and put logic in `src/lib` |
 
 Each integration folder has the same shape:
 
@@ -83,55 +101,24 @@ contracts/                  Hardhat project: PurchaseLog.sol, test, deploy scrip
 
 ## Shared types
 
-Defined in `src/types/index.ts`. Everyone codes against these:
-
-```ts
-interface Product {
-  id: string; name: string; distributor: string;
-  unitPrice: number;      // USD per pack
-  unitSize: number;       // amount of `unit` per pack, e.g. 50
-  unit: string;           // "lb", "oz", "each", "dozen", ...
-  shippingCost: number;   // flat USD per order
-  leadTimeDays: number; sourceUrl: string; scrapedAt: string;
-}
-
-interface InventoryItem {
-  sku: string; name: string; quantityOnHand: number;
-  unit: string; dailyUsage: number; shelfLifeDays: number;
-}
-
-interface Requirement {
-  id: string; itemName: string;
-  minStockLevel: number;  // in the inventory item's unit
-  maxBudget: number;      // USD per order, shipping included
-  qualityNotes: string;
-}
-
-interface Order {
-  id: string; productId: string;
-  quantity: number;       // number of packs
-  totalPrice: number; reasoning: string;
-  status: "proposed" | "approved" | "paid" | "failed";
-  txHash?: string; auditTxHash?: string; createdAt: string;
-}
-```
+Defined in `src/types/index.ts` and specified in PRD section 9: `Product`, `Distributor`, `InventoryItem`, `Requirement`, `AutonomySettings`, `Signal`, `DistributorPolicy`, `NegotiationMessage`, `Negotiation`, `Quote`, `Order`. Quotes are signed and verified with `src/lib/quotes.ts`.
 
 ## API routes
 
-| Route | Description |
-| --- | --- |
-| `GET /api/inventory` | Current inventory |
-| `GET /api/requirements` | All requirements |
-| `POST /api/requirements` | Create a requirement, or replace the one for the same item |
-| `GET /api/products` | Cached catalog (`?item=Flour` for one item, `?refresh=true` to re-scrape) |
-| `POST /api/agent/run` | Runs the agent and stores its proposals (replaces earlier unapproved ones) |
-| `POST /api/orders/[id]/approve` | Pays, logs on-chain, and marks the order `paid` |
-| `GET /api/orders` | All orders, newest first, each joined with its product |
-| `POST /api/distributor/checkout` | Mock distributor checkout. It will later sit behind x402 payment middleware |
+Full table in PRD section 10. Status today:
+
+| Route | Owner | Status |
+| --- | --- | --- |
+| `GET /api/inventory`, `GET/POST /api/requirements`, `GET /api/products` | shared | works (mocks) |
+| `POST /api/agent/run`, `GET /api/orders`, `POST /api/orders/[id]/approve` | Jason | works (mocks) |
+| `POST /api/distributors/[id]/checkout` | Jason | quote validation works; x402 TODO |
+| `POST /api/orders/[id]/reject`, `GET/PUT /api/settings` | Jason | to build (`rejectOrder` and store methods exist) |
+| `POST /api/supply/refresh`, `GET /api/signals`, `POST /api/signals/refresh` | Jake | to build |
+| `GET /api/distributors`, `POST .../claim`, `PUT .../products/[productId]`, `GET .../orders`, `POST .../negotiate`, `GET/PUT .../policy`, `GET /api/negotiations/[id]` | Jake | to build (store methods exist) |
 
 ## How the mock agent decides
 
-`src/lib/agent/mock.ts` uses real logic, not hard-coded output. For each inventory item it:
+`src/lib/agent/mock.ts` uses real logic, not hard-coded output. It differs from PRD section 8 in a few places that Jason fixes in the real agent. For each inventory item it:
 
 1. Computes days until stock runs out and until it drops below the minimum. Items that stay above the minimum for 7+ days are skipped.
 2. Matches listings to the item by name and converts their units (e.g. dozen → each).
@@ -148,7 +135,7 @@ interface Order {
 
 ## Workflow
 
-- One branch per person: `supply`, `agent`, `ui`. Open PRs into `main`.
+- One branch per person: `supply` (Jake), `agent` (Jason), `ui` (Stanley). Pull `main` often and open PRs into `main`.
 - Don't edit another person's folder, or the shared types and files, without telling the team first.
 - Run `npm run typecheck && npm run lint && npm run build` before opening a PR.
 - Never commit `.env.local` or any real key. `AGENT_WALLET_PRIVATE_KEY` must be a testnet-only wallet.

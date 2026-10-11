@@ -2,9 +2,15 @@
 // each item runs low, filters listings by the owner's requirements, scores them by
 // landed cost (price + shipping) and lead time, sizes the order within shelf life
 // and budget, and explains the choice in plain language.
+//
+// Known gaps vs docs/PRD.md section 8 (Person 2 to fix in the real agent):
+// reorder trigger uses a 7-day horizon instead of `onHand - usage * lead < min`;
+// ranking adds 2%/day of lead time instead of pure landed cost; target window is
+// min + 14 days instead of 14 days; no signals, negotiation, savings fields, or autonomy.
 
-import type { InventoryItem, Order, Product, Requirement } from "@/types";
+import type { InventoryItem, Order, Product, Quote, Requirement } from "@/types";
 import { newId } from "@/lib/ids";
+import { signQuote } from "@/lib/quotes";
 import { productMatchesItem, sameItemName, tokenize } from "@/lib/matching";
 import { convertUnits } from "@/lib/units";
 import type { PurchasingAgent } from "./index";
@@ -44,16 +50,28 @@ interface Plan {
 }
 
 export const ruleBasedAgent: PurchasingAgent = {
-  async runAgent(inventory, requirements, products) {
+  async runAgent({ inventory, requirements, products }) {
     const createdAt = new Date().toISOString();
     const orders: Order[] = [];
+    const quotes: Quote[] = [];
     for (const item of inventory) {
       const requirement = requirements.find((r) => sameItemName(r.itemName, item.name));
       const listings = uniqueById(products.filter((p) => productMatchesItem(p.name, item.name)));
       const order = planItem(item, requirement, listings, createdAt);
-      if (order) orders.push(order);
+      if (!order) continue;
+      // List-price quote, so the checkout has a signed amount to charge.
+      const product = listings.find((p) => p.id === order.productId)!;
+      const quote = signQuote({
+        productId: order.productId,
+        distributorId: order.distributorId,
+        quantity: order.quantity,
+        unitPrice: product.unitPrice,
+        totalPrice: order.totalPrice,
+      });
+      quotes.push(quote);
+      orders.push({ ...order, quoteId: quote.id });
     }
-    return orders;
+    return { orders, quotes, negotiations: [] };
   },
 };
 
@@ -100,10 +118,13 @@ function planItem(
   return {
     id: newId("ord"),
     productId: best.product.id,
+    distributorId: best.product.distributorId,
     quantity: best.packs,
     totalPrice: best.totalPrice,
     reasoning: explain(plan, best, candidates, qualityOk, listings.length),
+    signalIds: [],
     status: "proposed",
+    autoPurchased: false,
     createdAt,
   };
 }
@@ -160,7 +181,7 @@ function score(c: Candidate): number {
 }
 
 function isBaseline(product: Product): boolean {
-  return /costco/i.test(product.distributor);
+  return product.isRetailBaseline;
 }
 
 function uniqueById(products: Product[]): Product[] {
@@ -170,7 +191,7 @@ function uniqueById(products: Product[]): Product[] {
 function explain(plan: Plan, best: Candidate, candidates: Candidate[], qualityOk: Candidate[], listingCount: number): string {
   const { item, requirement, minStock, maxBudget, daysLeft, keywords } = plan;
   const p = best.product;
-  const notes = requirement?.qualityNotes.trim() ?? "";
+  const notes = requirement?.qualityNotes?.trim() ?? "";
 
   const num = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 1 });
   const money = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -189,7 +210,7 @@ function explain(plan: Plan, best: Candidate, candidates: Candidate[], qualityOk
   );
 
   lines.push(
-    `Best of ${listingCount} listing${listingCount === 1 ? "" : "s"}: ${p.distributor}, ${p.name} × ${best.packs} ` +
+    `Best of ${listingCount} listing${listingCount === 1 ? "" : "s"}: ${p.distributorName}, ${p.name} × ${best.packs} ` +
       `(${qty(best.amount)}) for ${money(best.totalPrice)}` +
       (p.shippingCost > 0 ? ` including ${money(p.shippingCost)} shipping` : " with free shipping") +
       `, ${perUnit(best.landedUnitCost)} landed.`,
@@ -229,7 +250,7 @@ function explain(plan: Plan, best: Candidate, candidates: Candidate[], qualityOk
         .sort((a, b) => a.landedUnitCost - b.landedUnitCost)[0];
       lines.push(
         cheaperSkipped
-          ? `Skipped a cheaper ${cheaperSkipped.product.distributor} listing (${perUnit(cheaperSkipped.landedUnitCost)}) because it doesn't match "${notes}".`
+          ? `Skipped a cheaper ${cheaperSkipped.product.distributorName} listing (${perUnit(cheaperSkipped.landedUnitCost)}) because it doesn't match "${notes}".`
           : `Matches your quality notes ("${notes}").`,
       );
     }
