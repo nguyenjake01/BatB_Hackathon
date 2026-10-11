@@ -12,6 +12,7 @@ import { OrderHistoryPanel } from "./OrderHistoryPanel";
 import { ProposedOrdersPanel } from "./ProposedOrdersPanel";
 import { RequirementsPanel } from "./RequirementsPanel";
 import { SignalsPanel } from "./SignalsPanel";
+import { SummaryStrip } from "./SummaryStrip";
 
 type Banner = { kind: "error" | "warning" | "success"; text: string };
 
@@ -35,6 +36,15 @@ const BANNER_STYLES: Record<Banner["kind"], string> = {
   error: "border-red-200 bg-red-50 text-red-800",
   warning: "border-amber-200 bg-amber-50 text-amber-900",
   success: "border-emerald-200 bg-emerald-50 text-emerald-800",
+};
+
+/** Where each part of the app gets its data, in the owner's words. */
+const MODULE_LABELS: Record<IntegrationModule, string> = {
+  square: "Square inventory",
+  supply: "Distributor prices",
+  negotiation: "Negotiation",
+  agent: "Agent",
+  payments: "AUSD payments",
 };
 
 export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, boolean> }) {
@@ -169,28 +179,28 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
 
   const proposed = orders.filter((o) => o.status === "proposed");
   const history = orders.filter((o) => o.status !== "proposed");
-  const realModules = (Object.keys(mockModes) as IntegrationModule[]).filter((m) => !mockModes[m]);
+  const modules = Object.keys(mockModes) as IntegrationModule[];
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-      <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-stone-900">Bakery Purchasing Agent</h1>
-          <p className="text-sm text-stone-500">
-            Finds the best distributor deals, proposes orders, and pays in AUSD once you approve.
-          </p>
-        </div>
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-medium ${
-            realModules.length === 0 ? "bg-stone-200 text-stone-700" : "bg-violet-100 text-violet-800"
-          }`}
-        >
-          {realModules.length === 0 ? "Mock mode" : `Live: ${realModules.join(", ")}`}
-        </span>
+      <header className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl">Owner dashboard</h1>
+        <p className="mt-1 max-w-2xl text-sm text-stone-500">
+          Your agent watches stock and distributor prices, negotiates the best deal, and pays in AUSD within the limits you set.
+        </p>
+        {/* Data provenance: judges and owners should see what is live and what is sample data. */}
+        <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-500">
+          {modules.map((m) => (
+            <li key={m} className="flex items-center gap-1.5">
+              <span className={`size-1.5 rounded-full ${mockModes[m] ? "bg-stone-300" : "bg-emerald-500"}`} />
+              {MODULE_LABELS[m]}: <span className={mockModes[m] ? "" : "font-medium text-emerald-700"}>{mockModes[m] ? "sample data" : "live"}</span>
+            </li>
+          ))}
+        </ul>
       </header>
 
       {banner && (
-        <div className={`mb-6 flex items-start justify-between gap-3 rounded-lg border px-4 py-3 text-sm ${BANNER_STYLES[banner.kind]}`}>
+        <div className={`mb-6 flex items-start justify-between gap-3 rounded-xl border px-4 py-3 text-sm ${BANNER_STYLES[banner.kind]}`}>
           <span>{banner.text}</span>
           <button type="button" onClick={() => setBanner(null)} className="font-medium opacity-70 hover:opacity-100">
             Dismiss
@@ -198,12 +208,13 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
         </div>
       )}
 
-      <div className="grid gap-6">
+      <div className="grid grid-cols-1 gap-6">
+        <SummaryStrip inventory={inventory} requirements={requirements} orders={orders} settings={settings} />
         <div className="grid gap-6 lg:grid-cols-5">
-          <div className="lg:col-span-3">
-            <InventoryPanel inventory={inventory} requirements={requirements} />
+          <div className="min-w-0 lg:col-span-3">
+            <InventoryPanel inventory={inventory} requirements={requirements} live={!mockModes.square} />
           </div>
-          <div className="grid gap-6 lg:col-span-2">
+          <div className="grid min-w-0 content-start gap-6 lg:col-span-2">
             <AutonomyPanel data={settings} error={settingsError} onSave={saveSettings} />
             <RequirementsPanel requirements={requirements} inventory={inventory ?? []} onSave={saveRequirement} />
           </div>

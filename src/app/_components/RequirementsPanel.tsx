@@ -5,11 +5,10 @@ import type { InventoryItem, Requirement } from "@/types";
 import { sameItemName } from "@/lib/matching";
 import { EmptyState, Panel } from "./Panel";
 import { money, qty } from "./format";
+import { button, input as inputClass, label as labelClass } from "./ui";
 
 const EMPTY_FORM = { itemName: "", minStockLevel: "", maxBudget: "", qualityNotes: "" };
 
-const inputClass =
-  "w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200";
 
 export function RequirementsPanel({
   requirements,
@@ -67,7 +66,7 @@ export function RequirementsPanel({
               <button
                 type="button"
                 onClick={() => edit(r)}
-                className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50"
+                className={`${button.link} shrink-0 text-xs`}
               >
                 Edit
               </button>
@@ -76,9 +75,9 @@ export function RequirementsPanel({
         </ul>
       )}
 
-      <form onSubmit={submit} className="mt-4 grid gap-3 border-t border-stone-100 pt-4 sm:grid-cols-2">
+      <form onSubmit={submit} className="mt-4 grid gap-3 border-t border-line pt-4 sm:grid-cols-2">
         <label className="text-sm">
-          <span className="mb-1 block font-medium text-stone-700">Item</span>
+          <span className={labelClass}>Item</span>
           <input
             required
             list="inventory-items"
@@ -94,7 +93,7 @@ export function RequirementsPanel({
           </datalist>
         </label>
         <label className="text-sm">
-          <span className="mb-1 block font-medium text-stone-700">
+          <span className={labelClass}>
             Minimum stock{formUnit && ` (${formUnit})`}
           </span>
           <input
@@ -108,7 +107,7 @@ export function RequirementsPanel({
           />
         </label>
         <label className="text-sm">
-          <span className="mb-1 block font-medium text-stone-700">Max budget per order ($)</span>
+          <span className={labelClass}>Max budget per order ($)</span>
           <input
             required
             type="number"
@@ -120,7 +119,7 @@ export function RequirementsPanel({
           />
         </label>
         <label className="text-sm">
-          <span className="mb-1 block font-medium text-stone-700">Quality notes</span>
+          <span className={labelClass}>Quality notes</span>
           <input
             value={form.qualityNotes}
             onChange={(e) => setForm({ ...form, qualityNotes: e.target.value })}
@@ -132,7 +131,7 @@ export function RequirementsPanel({
           <button
             type="submit"
             disabled={saving}
-            className="rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-700 disabled:opacity-50"
+            className={button.primary}
           >
             {saving ? "Saving…" : "Save requirement"}
           </button>
@@ -140,7 +139,7 @@ export function RequirementsPanel({
             <button
               type="button"
               onClick={() => setForm(EMPTY_FORM)}
-              className="rounded-md px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-100"
+              className={button.ghost}
             >
               Clear
             </button>

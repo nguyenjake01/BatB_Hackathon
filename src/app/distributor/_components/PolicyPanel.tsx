@@ -3,8 +3,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import type { Distributor, DistributorPolicy } from "@/types";
 import { api } from "@/app/_components/api";
-import { EmptyState, Panel } from "@/app/_components/Panel";
+import { Loading, NotConnected, Panel } from "@/app/_components/Panel";
 import { inputClass } from "./styles";
+import { button, label as labelClass, pill } from "@/app/_components/ui";
 
 /** Percent fields are edited as whole percents and stored as fractions. */
 interface Draft {
@@ -22,6 +23,8 @@ const toDraft = (p: DistributorPolicy): Draft => ({
   autoAccept: p.autoAccept,
   tiers: p.volumeTiers.map((t) => ({ minQty: String(t.minQty), discountPct: String(Math.round(t.discountPct * 1000) / 10) })),
 });
+
+const narrowInput = inputClass.replace("w-full", "w-24");
 
 const inRange = (s: string, min: number, max: number) => s !== "" && Number(s) >= min && Number(s) <= max;
 
@@ -58,13 +61,13 @@ export function PolicyPanel({
 
   const editable = distributor.claimed;
   const badge = policy?.isDefault && (
-    <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-600">default policy</span>
+    <span className={pill.gray}>default policy</span>
   );
 
   if (!policy || !draft) {
     return (
       <Panel title="Your negotiation agent" description="How far your agent may go when the buyer's agent haggles.">
-        <EmptyState>{loadError ? `Policy unavailable: ${loadError}` : "Loading policy…"}</EmptyState>
+        {loadError ? <NotConnected what="Agent policy" detail={loadError} /> : <Loading>Loading policy…</Loading>}
       </Panel>
     );
   }
@@ -116,7 +119,7 @@ export function PolicyPanel({
       <form onSubmit={submit} className="grid gap-4 text-sm">
         <div className="grid gap-3 sm:grid-cols-3">
           <label>
-            <span className="mb-1 block font-medium text-stone-700">Floor price (% of list)</span>
+            <span className={labelClass}>Floor price (% of list)</span>
             <input
               type="number"
               min={1}
@@ -130,7 +133,7 @@ export function PolicyPanel({
             <span className="mt-1 block text-xs text-stone-500">Your agent never sells below this.</span>
           </label>
           <label>
-            <span className="mb-1 block font-medium text-stone-700">Concession per round (%)</span>
+            <span className={labelClass}>Concession per round (%)</span>
             <input
               type="number"
               min={0}
@@ -144,7 +147,7 @@ export function PolicyPanel({
             <span className="mt-1 block text-xs text-stone-500">Share of the price gap it gives up each round.</span>
           </label>
           <label>
-            <span className="mb-1 block font-medium text-stone-700">High-stock threshold (packs)</span>
+            <span className={labelClass}>High-stock threshold (packs)</span>
             <input
               type="number"
               min={0}
@@ -173,7 +176,7 @@ export function PolicyPanel({
                   disabled={!editable}
                   aria-label="Minimum packs"
                   onChange={(e) => set({ tiers: draft.tiers.map((t, j) => (j === i ? { ...t, minQty: e.target.value } : t)) })}
-                  className={`${inputClass} w-24`}
+                  className={narrowInput}
                 />
                 <span className="text-stone-600">packs,</span>
                 <input
@@ -187,14 +190,14 @@ export function PolicyPanel({
                   onChange={(e) =>
                     set({ tiers: draft.tiers.map((t, j) => (j === i ? { ...t, discountPct: e.target.value } : t)) })
                   }
-                  className={`${inputClass} w-24`}
+                  className={narrowInput}
                 />
                 <span className="text-stone-600">% off</span>
                 {editable && (
                   <button
                     type="button"
                     onClick={() => set({ tiers: draft.tiers.filter((_, j) => j !== i) })}
-                    className="rounded-md px-2 py-1 text-xs font-medium text-stone-500 hover:bg-stone-100"
+                    className={`${button.ghost} px-2 py-1 text-xs`}
                   >
                     Remove
                   </button>
@@ -206,7 +209,7 @@ export function PolicyPanel({
             <button
               type="button"
               onClick={() => set({ tiers: [...draft.tiers, { minQty: "", discountPct: "" }] })}
-              className="mt-2 rounded-md px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50"
+              className={`${button.link} mt-2 text-xs`}
             >
               Add discount tier
             </button>
@@ -229,14 +232,14 @@ export function PolicyPanel({
             <button
               type="submit"
               disabled={!valid || saving}
-              className="rounded-md bg-stone-900 px-4 py-2 font-medium text-white hover:bg-stone-700 disabled:opacity-50"
+              className={button.primary}
             >
               {saving ? "Saving…" : "Save policy"}
             </button>
             <button
               type="button"
               onClick={() => setDraft(toDraft(policy))}
-              className="rounded-md px-4 py-2 font-medium text-stone-600 hover:bg-stone-100"
+              className={button.ghost}
             >
               Reset
             </button>
