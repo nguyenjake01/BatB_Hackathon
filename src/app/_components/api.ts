@@ -10,6 +10,7 @@ import type {
   Product,
   Quote,
   Requirement,
+  Signal,
 } from "@/types";
 
 /**
@@ -62,6 +63,13 @@ export const api = {
     request<{ negotiations: NegotiationEntry[] }>(`/api/negotiations?orderId=${encodeURIComponent(orderId)}`).then(
       (d) => d.negotiations,
     ),
+
+  // ---- Signals (routes owned by Jake) ----
+
+  signals: () => request<{ signals: Signal[] }>("/api/signals").then((d) => d.signals),
+
+  refreshSignals: () =>
+    request<{ signals: Signal[] }>("/api/signals/refresh", { method: "POST" }).then((d) => d.signals),
 
   // ---- Distributor portal (routes owned by Jake) ----
 

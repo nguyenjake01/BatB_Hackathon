@@ -11,6 +11,7 @@ import { InventoryPanel } from "./InventoryPanel";
 import { OrderHistoryPanel } from "./OrderHistoryPanel";
 import { ProposedOrdersPanel } from "./ProposedOrdersPanel";
 import { RequirementsPanel } from "./RequirementsPanel";
+import { SignalsPanel } from "./SignalsPanel";
 
 type Banner = { kind: "error" | "warning" | "success"; text: string };
 
@@ -207,6 +208,7 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
             <RequirementsPanel requirements={requirements} inventory={inventory ?? []} onSave={saveRequirement} />
           </div>
         </div>
+        <SignalsPanel onError={(text) => setBanner({ kind: "error", text })} />
         <ProposedOrdersPanel
           orders={proposed}
           hasRun={hasRun}
