@@ -3,11 +3,9 @@
 import { useState, type FormEvent } from "react";
 import type { AutonomySettings } from "@/types";
 import type { SettingsResponse } from "./api";
-import { EmptyState, Panel } from "./Panel";
+import { Loading, NotConnected, Panel } from "./Panel";
 import { money } from "./format";
-
-const inputClass =
-  "w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200";
+import { button, input as inputClass, label as labelClass } from "./ui";
 
 const MODES: { value: AutonomySettings["mode"]; label: string; hint: string }[] = [
   { value: "approval", label: "Ask me first", hint: "The agent proposes orders. Nothing is paid until you approve." },
@@ -30,7 +28,7 @@ export function AutonomyPanel({
   if (!data) {
     return (
       <Panel title="Autonomy" description="How much freedom the agent has to spend.">
-        <EmptyState>{error ? `Settings unavailable: ${error}` : "Loading settings…"}</EmptyState>
+        {error ? <NotConnected what="Autonomy settings" detail={error} /> : <Loading>Loading settings…</Loading>}
       </Panel>
     );
   }
@@ -64,8 +62,8 @@ export function AutonomyPanel({
           {MODES.map((m) => (
             <label
               key={m.value}
-              className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm ${
-                form.mode === m.value ? "border-amber-400 bg-amber-50" : "border-stone-200"
+              className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm transition-colors ${
+                form.mode === m.value ? "border-amber-400 bg-amber-50/70 ring-1 ring-amber-200" : "border-line hover:bg-stone-50"
               }`}
             >
               <input
@@ -86,7 +84,7 @@ export function AutonomyPanel({
 
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="text-sm">
-            <span className="mb-1 block font-medium text-stone-700">Per-order limit ($)</span>
+            <span className={labelClass}>Per-order limit ($)</span>
             <input
               required
               type="number"
@@ -98,7 +96,7 @@ export function AutonomyPanel({
             />
           </label>
           <label className="text-sm">
-            <span className="mb-1 block font-medium text-stone-700">Weekly budget ($)</span>
+            <span className={labelClass}>Weekly budget ($)</span>
             <input
               required
               type="number"
@@ -130,7 +128,7 @@ export function AutonomyPanel({
           <button
             type="submit"
             disabled={saving || draft === null}
-            className="rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-700 disabled:opacity-50"
+            className={button.primary}
           >
             {saving ? "Saving…" : "Save settings"}
           </button>
@@ -138,7 +136,7 @@ export function AutonomyPanel({
             <button
               type="button"
               onClick={() => setDraft(null)}
-              className="rounded-md px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-100"
+              className={button.ghost}
             >
               Cancel
             </button>

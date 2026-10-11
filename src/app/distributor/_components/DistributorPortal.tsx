@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import type { Distributor, Product } from "@/types";
 import { api } from "@/app/_components/api";
-import { EmptyState, Panel } from "@/app/_components/Panel";
+import { EmptyState, Loading, NotConnected, Panel } from "@/app/_components/Panel";
 import { IncomingOrdersPanel } from "./IncomingOrdersPanel";
 import { ListingsPanel } from "./ListingsPanel";
 import { PolicyPanel } from "./PolicyPanel";
 import { inputClass } from "./styles";
+import { button, label as labelClass } from "@/app/_components/ui";
 
 type Banner = { kind: "error" | "success"; text: string };
 
@@ -52,15 +53,15 @@ export function DistributorPortal({ paymentsMocked }: { paymentsMocked: boolean 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
       <header className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-stone-900">Distributor portal</h1>
-        <p className="text-sm text-stone-500">
+        <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl">Distributor portal</h1>
+        <p className="mt-1 max-w-2xl text-sm text-stone-500">
           Claim your listings, set prices and stock, tell your agent how far it may negotiate, and see AUSD payments.
         </p>
       </header>
 
       {banner && (
         <div
-          className={`mb-6 flex items-start justify-between gap-3 rounded-lg border px-4 py-3 text-sm ${
+          className={`mb-6 flex items-start justify-between gap-3 rounded-xl border px-4 py-3 text-sm ${
             banner.kind === "error" ? "border-red-200 bg-red-50 text-red-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"
           }`}
         >
@@ -71,16 +72,16 @@ export function DistributorPortal({ paymentsMocked }: { paymentsMocked: boolean 
         </div>
       )}
 
-      <div className="grid gap-6">
+      <div className="grid grid-cols-1 gap-6">
         <Panel title="Find your business" description="Every distributor the agent has scraped prices from.">
           {distributors === null ? (
-            <EmptyState>Loading distributors…</EmptyState>
+            <Loading>Loading distributors…</Loading>
           ) : distributors.length === 0 ? (
-            <EmptyState>{loadError ? `Distributors unavailable: ${loadError}` : "No distributors yet."}</EmptyState>
+            loadError ? <NotConnected what="The distributor directory" detail={loadError} /> : <EmptyState>No distributors yet.</EmptyState>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="text-sm">
-                <span className="mb-1 block font-medium text-stone-700">Distributor</span>
+                <span className={labelClass}>Distributor</span>
                 <select value={selectedId} onChange={(e) => setSelectedId(e.target.value)} className={inputClass}>
                   <option value="">Choose your business…</option>
                   {distributors.map((d) => (
@@ -159,7 +160,7 @@ function ClaimForm({
   return (
     <form onSubmit={submit} className="text-sm">
       <label className="block">
-        <span className="mb-1 block font-medium text-stone-700">Payout wallet (Base Sepolia)</span>
+        <span className={labelClass}>Payout wallet (Base Sepolia)</span>
         <input
           value={wallet}
           onChange={(e) => setWallet(e.target.value)}
@@ -173,7 +174,7 @@ function ClaimForm({
         <button
           type="submit"
           disabled={!valid || saving || wallet.trim() === distributor.payoutWallet}
-          className="rounded-md bg-stone-900 px-4 py-2 font-medium text-white hover:bg-stone-700 disabled:opacity-50"
+          className={button.primary}
         >
           {saving ? "Saving…" : distributor.claimed ? "Update wallet" : "Claim this business"}
         </button>

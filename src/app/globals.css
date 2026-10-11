@@ -5,7 +5,18 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Warm "bakery" neutrals for the page; cards stay white. */
+@theme {
+  --color-canvas: #f7f4ee;
+  --color-line: #e8e2d8;
+}
+
 body {
-  background: var(--color-stone-50);
+  background: var(--color-canvas);
   color: var(--color-stone-900);
+  font-feature-settings: "cv11", "ss01";
+}
+
+::selection {
+  background: var(--color-amber-200);
 }

@@ -6,6 +6,7 @@ import { api } from "@/app/_components/api";
 import { EmptyState, Panel } from "@/app/_components/Panel";
 import { dateTime, money, num } from "@/app/_components/format";
 import { inputClass } from "./styles";
+import { button } from "@/app/_components/ui";
 
 export function ListingsPanel({
   distributor,
@@ -78,7 +79,7 @@ function ListingRow({
   }
 
   return (
-    <li className="grid gap-3 py-3 text-sm md:grid-cols-[1fr_8rem_8rem_auto_auto] md:items-end">
+    <li className="grid gap-3 py-4 text-sm md:grid-cols-[1fr_8rem_8rem_auto_auto] md:items-end">
       <div>
         <a href={product.sourceUrl} target="_blank" rel="noreferrer" className="font-medium text-stone-900 hover:underline">
           {product.name}
@@ -127,7 +128,7 @@ function ListingRow({
         type="button"
         onClick={save}
         disabled={!editable || !dirty || !valid || saving}
-        className="rounded-md bg-stone-900 px-4 py-2 font-medium text-white hover:bg-stone-700 disabled:opacity-40"
+        className={button.primary}
       >
         {saving ? "Saving…" : "Save"}
       </button>

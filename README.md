@@ -1,10 +1,45 @@
 # Bakery Purchasing Agent
 
-An AI purchasing agent that sits between small businesses and their distributors. A business (our test case is a bakery) connects its Square inventory and sets purchasing requirements. The agent then compares real distributor listings scraped from the web and proposes orders, explaining each choice in plain language. Once the owner approves, it pays in AUSD stablecoin via x402 and logs every purchase on-chain as an audit trail.
+**An AI purchasing agent that gets small businesses distributor prices instead of Costco prices, negotiates with distributors' own agents, and pays in AUSD stablecoin with an on-chain audit trail.**
 
-Hackathon tracks: **Context.dev** (web scraping), **Agora AUSD** (agentic payments with x402 on Base Sepolia), **YZi Labs** (BSC Testnet deployment).
+<!-- TODO before submitting (Stanley): fill in both links, then re-check every claim below against
+     what actually works in the final build. Remove any line that isn't true on the day. -->
+**[Watch the 2-minute demo](TODO-youtube-link)** · **[Try the live app](TODO-production-url)**
 
-> The repo is a working skeleton. Every integration runs on realistic mock data so all three of us can build in parallel and swap in the real thing independently.
+## The problem
+
+Small bakeries, cafés and shops buy supplies at retail (Costco, Walmart) because the national distributors with better prices are hard to find and hard to reach. Owners also don't have time to watch prices and supply news, so they reorder late and pay whatever the price is that day. Distributors, meanwhile, miss out on these customers.
+
+## What it does
+
+For the **business owner** (our demo customer is a bakery):
+- **Live inventory from Square.** Stock on hand comes from the Square Inventory API; daily usage is derived from recent sales, so the dashboard shows how many days each ingredient has left.
+- **Rules and limits.** The owner sets a minimum stock, a budget and quality notes per ingredient, and chooses how much freedom the agent has: *ask me first*, or *auto-buy* under a per-order limit and a weekly budget.
+- **An agent that explains itself.** The agent compares real distributor listings scraped from the web, decides what to buy, when and how much (capped by shelf life), and writes out why, including savings against the retail price.
+- **Agent-to-agent negotiation.** The buyer's agent haggles with each distributor's agent for up to three rounds. The full chat is shown side by side, including the distributors that walked away. The winning deal becomes a signed quote, and that quote is exactly what gets paid.
+- **Stablecoin payment and audit trail.** Approved orders are paid in AUSD over x402 on Base Sepolia, and each purchase is logged to a `PurchaseLog` contract on BSC Testnet. Both transactions link to block explorers.
+- **Market signals.** Price changes on distributor pages and supply news (for example, a butter shortage) are flagged as *buy early* or *wait*, with source links.
+
+For the **distributor**, a portal (Owner / Distributor switch at the top of the app) to claim their scraped listing, set a payout wallet, edit price and stock, set their agent's negotiation limits (floor price, concession per round, volume discounts), and see incoming orders and AUSD received.
+
+## Hackathon tracks
+
+| Track | How we use it |
+|---|---|
+| **Most Technically Impressive** | Real data end to end: Square sandbox inventory, scraped prices, deterministic agent math (the LLM only rephrases, never sets numbers), real testnet payments and on-chain logs |
+| **Context.dev** | Scrapes distributor catalogs and prices, monitors product pages for price changes, and searches supply news per ingredient |
+| **Agora AUSD (x402)** | The agent pays each distributor's checkout endpoint via x402 in AUSD on Base Sepolia, using ERC-3009 gasless transfers |
+| **YZi Labs** | `PurchaseLog` contract on BSC Testnet: a tamper-evident record of every agent purchase, including a hash of the negotiation transcript, under owner-set spending limits |
+
+## Built with
+
+Next.js 16, React 19, TypeScript, Tailwind CSS · Square Inventory API (sandbox) · Context.dev · x402 + AUSD on Base Sepolia · Solidity + Hardhat on BSC Testnet · deployed on Vercel.
+
+Team: Jake (supply, scraping and negotiation), Jason (agent logic and payments), Stanley (Square inventory, UI and deployment).
+
+---
+
+> **Team notes below.** The repo started as a skeleton where every integration runs on realistic mock data, so all three of us could build in parallel and swap in the real thing independently.
 
 ## Start here (team)
 

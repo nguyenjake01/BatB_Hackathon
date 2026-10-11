@@ -1,8 +1,8 @@
 // Real inventory source backed by the Square Inventory API (sandbox first).
 //
 // Stock on hand comes from Square's IN_STOCK counts. Square doesn't track daily usage, so we
-// derive it from stock sold or wasted over the last USAGE_WINDOW_DAYS, divided by the days of
-// history actually available (at least one: Square only accepts changes up to 24h in the past,
+// derive it from stock sold or wasted over the last USAGE_WINDOW_DAYS, divided by the days that
+// history covers, first record to latest sale (at least one: Square only accepts changes up to 24h back,
 // so a fresh sandbox has about a day). Units and shelf life come from our own ITEM_CONFIG.
 // Run `node --env-file=.env.local src/lib/square/seed.mjs` once to fill a fresh sandbox.
 
@@ -80,8 +80,11 @@ export const squareInventory: InventorySource = {
     const now = Date.now();
     const since = now - USAGE_WINDOW_DAYS * DAY_MS;
     const used = new Map<string, number>();
-    /** Earliest change per variation, to know how many days of history we have. */
+    /** Earliest change per variation: where its history starts. */
     const firstSeen = new Map<string, number>();
+    /** Latest usage per variation: where its history ends. Measuring to "now" instead would
+     * dilute usage every hour no new sale is recorded. */
+    const lastUsed = new Map<string, number>();
     for (const change of changes) {
       const c = change.adjustment ?? change.physical_count;
       if (!c?.occurred_at) continue;
@@ -90,8 +93,10 @@ export const squareInventory: InventorySource = {
       const a = change.adjustment;
       if (!a || at < since || a.from_state !== "IN_STOCK" || !USED_STATES.has(a.to_state ?? "")) continue;
       used.set(a.catalog_object_id, (used.get(a.catalog_object_id) ?? 0) + Number(a.quantity ?? 0));
+      lastUsed.set(a.catalog_object_id, Math.max(lastUsed.get(a.catalog_object_id) ?? at, at));
     }
-    const historyDays = (id: string) => Math.max(1, (now - Math.max(since, firstSeen.get(id) ?? now)) / DAY_MS);
+    const historyDays = (id: string) =>
+      Math.max(1, ((lastUsed.get(id) ?? now) - Math.max(since, firstSeen.get(id) ?? now)) / DAY_MS);
 
     return variations.map((v): InventoryItem => {
       // Items added in Square without our config still show up; assume counted units, a year's shelf life.
