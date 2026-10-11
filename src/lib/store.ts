@@ -34,6 +34,8 @@ export interface Store {
   /** Also creates an unclaimed `Distributor` for any new `distributorId`. */
   upsertProducts(products: Product[]): Promise<void>;
   updateProduct(id: string, patch: Partial<Omit<Product, "id">>): Promise<Product | undefined>;
+  /** Drops listings not in `ids` (delisted, or filtered out by a re-scrape). Distributors are kept. */
+  retainProducts(ids: string[]): Promise<void>;
 
   listDistributors(): Promise<Distributor[]>;
   getDistributor(id: string): Promise<Distributor | undefined>;
@@ -48,8 +50,10 @@ export interface Store {
 
   getNegotiation(id: string): Promise<Negotiation | undefined>;
   saveNegotiations(negotiations: Negotiation[]): Promise<void>;
+  listNegotiations(): Promise<Negotiation[]>;
   getQuote(id: string): Promise<Quote | undefined>;
   saveQuotes(quotes: Quote[]): Promise<void>;
+  listQuotes(): Promise<Quote[]>;
 
   /** Newest first. */
   listOrders(): Promise<Order[]>;
@@ -167,6 +171,11 @@ class MemoryStore implements Store {
     return structuredClone(updated);
   }
 
+  async retainProducts(ids: string[]) {
+    const keep = new Set(ids);
+    for (const id of [...this.products.keys()]) if (!keep.has(id)) this.products.delete(id);
+  }
+
   async listDistributors() {
     return structuredClone([...this.distributors.values()]);
   }
@@ -210,6 +219,10 @@ class MemoryStore implements Store {
     for (const n of negotiations) this.negotiations.set(n.id, structuredClone(n));
   }
 
+  async listNegotiations() {
+    return structuredClone([...this.negotiations.values()]);
+  }
+
   async getQuote(id: string) {
     const quote = this.quotes.get(id);
     return quote && structuredClone(quote);
@@ -217,6 +230,10 @@ class MemoryStore implements Store {
 
   async saveQuotes(quotes: Quote[]) {
     for (const q of quotes) this.quotes.set(q.id, structuredClone(q));
+  }
+
+  async listQuotes() {
+    return structuredClone([...this.quotes.values()]);
   }
 
   async listOrders() {

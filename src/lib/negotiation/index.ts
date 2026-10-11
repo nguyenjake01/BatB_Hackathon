@@ -60,9 +60,19 @@ export function buyerOpenings(candidates: NegotiationCandidate[]): number[] {
   });
 }
 
+/**
+ * Negotiations from one `negotiateAll` call share an id prefix (`neg_<batch>_<n>`), so the
+ * UI can show every distributor the buyer talked to for an order, including no-deals.
+ */
+export function negotiationBatch(negotiationId: string): string | null {
+  const match = /^(neg_[a-z0-9]+)_\d+$/.exec(negotiationId);
+  return match ? match[1] : null;
+}
+
 /** Negotiates with every candidate in parallel (max 3 rounds each). */
 export async function negotiateAll(candidates: NegotiationCandidate[]): Promise<NegotiationResult[]> {
   const openings = buyerOpenings(candidates);
+  const batch = newId("neg");
   return Promise.all(
     candidates.map(async ({ product, quantity, walkAwayUnitPrice }, i): Promise<NegotiationResult> => {
       const policy = await store.getPolicy(product.distributorId);
@@ -78,7 +88,7 @@ export async function negotiateAll(candidates: NegotiationCandidate[]): Promise<
       });
 
       const negotiation: Negotiation = {
-        id: newId("neg"),
+        id: `${batch}_${i}`,
         productId: product.id,
         distributorId: product.distributorId,
         quantity,
