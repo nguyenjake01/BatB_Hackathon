@@ -18,6 +18,7 @@ import type {
 } from "@/types";
 import { newId } from "@/lib/ids";
 import { sameItemName } from "@/lib/matching";
+import { supabaseBacked } from "@/lib/store-supabase";
 
 export type RequirementInput = Omit<Requirement, "id">;
 
@@ -101,6 +102,19 @@ function websiteOf(url: string): string {
   }
 }
 
+/** Everything the store holds, as plain JSON (for STORE=supabase persistence). */
+interface StoreSnapshot {
+  requirements: Requirement[];
+  settings: AutonomySettings;
+  products: Product[];
+  distributors: Distributor[];
+  policies: DistributorPolicy[];
+  signals: Signal[];
+  negotiations: Negotiation[];
+  quotes: Quote[];
+  orders: Order[];
+}
+
 class MemoryStore implements Store {
   private requirements: Requirement[] = SEED_REQUIREMENTS.map((r) => ({ id: newId("req"), ...r }));
   private settings: AutonomySettings = { ...DEFAULT_SETTINGS };
@@ -111,6 +125,36 @@ class MemoryStore implements Store {
   private negotiations = new Map<string, Negotiation>();
   private quotes = new Map<string, Quote>();
   private orders: Order[] = [];
+
+  toSnapshot(): StoreSnapshot {
+    return {
+      requirements: this.requirements,
+      settings: this.settings,
+      products: [...this.products.values()],
+      distributors: [...this.distributors.values()],
+      policies: [...this.policies.values()],
+      signals: this.signals,
+      negotiations: [...this.negotiations.values()],
+      quotes: [...this.quotes.values()],
+      orders: this.orders,
+    };
+  }
+
+  /** A store holding `snapshot`, or a fresh one (seed requirements, default settings) for null. */
+  static fromSnapshot(snapshot: StoreSnapshot | null): MemoryStore {
+    const store = new MemoryStore();
+    if (!snapshot) return store;
+    store.requirements = snapshot.requirements;
+    store.settings = snapshot.settings;
+    store.products = new Map(snapshot.products.map((p) => [p.id, p]));
+    store.distributors = new Map(snapshot.distributors.map((d) => [d.id, d]));
+    store.policies = new Map(snapshot.policies.map((p) => [p.distributorId, p]));
+    store.signals = snapshot.signals;
+    store.negotiations = new Map(snapshot.negotiations.map((n) => [n.id, n]));
+    store.quotes = new Map(snapshot.quotes.map((q) => [q.id, q]));
+    store.orders = snapshot.orders;
+    return store;
+  }
 
   async listRequirements() {
     return structuredClone(this.requirements);
@@ -275,4 +319,8 @@ class MemoryStore implements Store {
 // Kept on globalThis so dev hot reloads and separate route bundles share one instance.
 const globalForStore = globalThis as unknown as { __store?: Store };
 
-export const store: Store = (globalForStore.__store ??= new MemoryStore());
+// STORE=supabase (set on Vercel) persists to Supabase so every serverless instance shares data.
+export const store: Store = (globalForStore.__store ??=
+  process.env.STORE === "supabase"
+    ? supabaseBacked(MemoryStore.fromSnapshot, (s: MemoryStore) => s.toSnapshot())
+    : new MemoryStore());
