@@ -85,7 +85,12 @@ export interface SearchResult {
 /** POST /web/search: ranked web results (10–100). */
 export async function searchWeb(
   query: string,
-  options: { freshness?: "last_24_hours" | "last_week" | "last_month" | "last_year"; numResults?: number } = {},
+  options: {
+    freshness?: "last_24_hours" | "last_week" | "last_month" | "last_year";
+    numResults?: number;
+    country?: string;
+    excludeDomains?: string[];
+  } = {},
 ): Promise<SearchResult[]> {
   const res = await post<{ results: SearchResult[] }>("/web/search", { query, numResults: 10, ...options });
   return res.results ?? [];
