@@ -1,14 +1,19 @@
 import { errorResponse } from "@/lib/http";
 import { store } from "@/lib/store";
-import { refreshCatalog } from "@/lib/supply";
+import { getInventory } from "@/lib/square";
+import { getProducts } from "@/lib/supply";
 
 /**
  * All distributors (claimed or not) with their listings and agent policy, for the
- * distributor portal. Loads the catalog first if nothing has been scraped yet.
+ * distributor portal. On a fresh server, loads the cached catalog (the committed snapshot)
+ * rather than re-scraping, which is slow and trips Context.dev's concurrency limit.
  */
 export async function GET() {
   try {
-    if ((await store.listProducts()).length === 0) await store.upsertProducts(await refreshCatalog());
+    if ((await store.listProducts()).length === 0) {
+      const inventory = await getInventory();
+      await store.upsertProducts((await Promise.all(inventory.map((item) => getProducts(item.name)))).flat());
+    }
     const [distributors, products] = await Promise.all([store.listDistributors(), store.listProducts()]);
     const withDetails = await Promise.all(
       distributors.map(async (d) => ({
