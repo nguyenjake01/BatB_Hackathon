@@ -407,3 +407,7 @@ Three planning documents existed. This section records how they were reconciled.
 | Route ownership | all routes shared | Routes belong to the owner of the feature (section 13); `src/lib/orders.ts`, `store.ts`, `quotes.ts`, `types/` stay shared. |
 | Env vars | 10 vars | Added `DEMO_DISTRIBUTOR_WALLET`, `NEGOTIATION_SIGNING_SECRET`. |
 | Negotiation opening offer | "lowest list price among candidates" | Packs differ in size, so compare **per item unit**, then convert back to each candidate's pack price. |
+| Negotiation, last round | "Otherwise no_deal" | In round 3 the buyer also accepts a distributor offer at or below its walk-away price. Without this, default 30%/30% concessions almost never close within 2% in 3 rounds. Agreed prices are clamped to [floor, walk-away] (unit-tested). |
+| Signal direction | unspecified | News: keyword heuristic (rising/shortage → `buy_early`, falling/glut → `wait`); LLM classification is optional and not built yet. Price change ≥3%: cut → `buy_early`, rise → `wait`. |
+| News source | "news search" | Context.dev `/news/search` only searches by company, so ingredient news uses `/web/search` with `freshness: last_month`. Price monitoring diffs fresh scrapes against the cached catalog instead of using async `/monitors` webhooks. |
+| Shipping / lead time | from listing | Used when the scraped page states them; otherwise per-distributor fallbacks in `src/lib/supply/catalog.ts` (from published shipping policies). Costco Business Delivery prices are delivered, so shipping is 0. |
