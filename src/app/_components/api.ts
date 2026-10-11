@@ -1,6 +1,12 @@
 // Typed client for our API routes.
 
-import type { InventoryItem, OrderWithProduct, Requirement } from "@/types";
+import type { AutonomySettings, InventoryItem, OrderWithProduct, Requirement } from "@/types";
+
+/** Shape of GET/PUT /api/settings (owner: Jason). `spentThisWeek` is USD paid in the last 7 days. */
+export interface SettingsResponse {
+  settings: AutonomySettings;
+  spentThisWeek: number;
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
@@ -27,4 +33,12 @@ export const api = {
     request<{ order: OrderWithProduct; warning?: string }>(`/api/orders/${encodeURIComponent(id)}/approve`, {
       method: "POST",
     }),
+
+  reject: (id: string) =>
+    request<{ order: OrderWithProduct }>(`/api/orders/${encodeURIComponent(id)}/reject`, { method: "POST" }),
+
+  settings: () => request<SettingsResponse>("/api/settings"),
+
+  saveSettings: (patch: Partial<AutonomySettings>) =>
+    request<SettingsResponse>("/api/settings", { method: "PUT", body: JSON.stringify(patch) }),
 };

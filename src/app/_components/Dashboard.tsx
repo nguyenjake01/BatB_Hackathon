@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { InventoryItem, OrderWithProduct, Requirement } from "@/types";
+import type { AutonomySettings, InventoryItem, OrderWithProduct, Requirement } from "@/types";
 import type { IntegrationModule } from "@/lib/config";
-import { api } from "./api";
+import { api, type SettingsResponse } from "./api";
+import { AutonomyPanel } from "./AutonomyPanel";
+import { money } from "./format";
 import { InventoryPanel } from "./InventoryPanel";
 import { OrderHistoryPanel } from "./OrderHistoryPanel";
 import { ProposedOrdersPanel } from "./ProposedOrdersPanel";
@@ -40,7 +42,19 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
   const [banner, setBanner] = useState<Banner | null>(null);
   const [hasRun, setHasRun] = useState(false);
   const [running, setRunning] = useState(false);
-  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<{ id: string; action: "approve" | "reject" } | null>(null);
+  // Fetched separately so a missing settings route doesn't hide the rest of the dashboard.
+  const [settings, setSettings] = useState<SettingsResponse | null>(null);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+
+  const loadSettings = useCallback(async () => {
+    try {
+      setSettings(await api.settings());
+      setSettingsError(null);
+    } catch (error) {
+      setSettingsError((error as Error).message);
+    }
+  }, []);
 
   const apply = useCallback((data: DashboardData) => {
     // Keep what's on screen if a refresh fails, but stop showing "Loading" after the first load.
@@ -51,7 +65,9 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
   }, []);
 
   async function refresh() {
-    apply(await fetchDashboard());
+    // Settings include "spent this week", which changes when orders are paid.
+    const [data] = await Promise.all([fetchDashboard(), loadSettings()]);
+    apply(data);
   }
 
   useEffect(() => {
@@ -59,6 +75,14 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
     fetchDashboard().then((data) => {
       if (!cancelled) apply(data);
     });
+    api.settings().then(
+      (data) => {
+        if (!cancelled) setSettings(data);
+      },
+      (error: Error) => {
+        if (!cancelled) setSettingsError(error.message);
+      },
+    );
     return () => {
       cancelled = true;
     };
@@ -83,7 +107,7 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
   }
 
   async function approve(id: string) {
-    setApprovingId(id);
+    setBusyId({ id, action: "approve" });
     setBanner(null);
     try {
       const { order, warning } = await api.approve(id);
@@ -95,8 +119,36 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
     } catch (error) {
       setBanner({ kind: "error", text: `Approval failed: ${(error as Error).message}` });
     } finally {
-      setApprovingId(null);
+      setBusyId(null);
       await refresh();
+    }
+  }
+
+  async function reject(id: string) {
+    setBusyId({ id, action: "reject" });
+    setBanner(null);
+    try {
+      const { order } = await api.reject(id);
+      setBanner({ kind: "success", text: `Rejected order from ${order.product?.distributorName ?? "distributor"}.` });
+    } catch (error) {
+      setBanner({ kind: "error", text: `Reject failed: ${(error as Error).message}` });
+    } finally {
+      setBusyId(null);
+      await refresh();
+    }
+  }
+
+  async function saveSettings(next: AutonomySettings): Promise<boolean> {
+    try {
+      setSettings(await api.saveSettings(next));
+      setBanner({
+        kind: "success",
+        text: next.mode === "auto" ? `Auto-buy on: up to ${money(next.perOrderLimit)} per order.` : "Approval mode on: the agent will ask before paying.",
+      });
+      return true;
+    } catch (error) {
+      setBanner({ kind: "error", text: `Couldn't save settings: ${(error as Error).message}` });
+      return false;
     }
   }
 
@@ -148,7 +200,8 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
           <div className="lg:col-span-3">
             <InventoryPanel inventory={inventory} requirements={requirements} />
           </div>
-          <div className="lg:col-span-2">
+          <div className="grid gap-6 lg:col-span-2">
+            <AutonomyPanel data={settings} error={settingsError} onSave={saveSettings} />
             <RequirementsPanel requirements={requirements} inventory={inventory ?? []} onSave={saveRequirement} />
           </div>
         </div>
@@ -156,9 +209,10 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
           orders={proposed}
           hasRun={hasRun}
           running={running}
-          approvingId={approvingId}
+          busyId={busyId}
           onRun={runAgent}
           onApprove={approve}
+          onReject={reject}
         />
         <OrderHistoryPanel orders={history} paymentsMocked={mockModes.payments} />
       </div>
