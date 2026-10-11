@@ -34,6 +34,8 @@ export interface Store {
   /** Also creates an unclaimed `Distributor` for any new `distributorId`. */
   upsertProducts(products: Product[]): Promise<void>;
   updateProduct(id: string, patch: Partial<Omit<Product, "id">>): Promise<Product | undefined>;
+  /** Drops listings not in `ids` (delisted, or filtered out by a re-scrape). Distributors are kept. */
+  retainProducts(ids: string[]): Promise<void>;
 
   listDistributors(): Promise<Distributor[]>;
   getDistributor(id: string): Promise<Distributor | undefined>;
@@ -165,6 +167,11 @@ class MemoryStore implements Store {
     const updated = { ...product, ...patch };
     this.products.set(id, updated);
     return structuredClone(updated);
+  }
+
+  async retainProducts(ids: string[]) {
+    const keep = new Set(ids);
+    for (const id of [...this.products.keys()]) if (!keep.has(id)) this.products.delete(id);
   }
 
   async listDistributors() {
