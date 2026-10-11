@@ -1,12 +1,14 @@
 // Autonomy settings (owner: Person 2, Jason). P0.
-// Both methods return `{ settings, spentLast7Days }` so the UI can show "spent this week".
+// Both methods return `{ settings, spentLast7Days, spentThisWeek }` so the UI can show "spent this
+// week". The two numbers are the same rolling 7-day total; the dashboard reads `spentThisWeek`.
 
 import type { AutonomySettings } from "@/types";
 import { errorResponse, HttpError, readJson } from "@/lib/http";
 import { store } from "@/lib/store";
 
 async function respond(settings: AutonomySettings) {
-  return Response.json({ settings, spentLast7Days: await store.spentLast7Days() });
+  const spentLast7Days = await store.spentLast7Days();
+  return Response.json({ settings, spentLast7Days, spentThisWeek: spentLast7Days });
 }
 
 export async function GET() {

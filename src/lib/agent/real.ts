@@ -74,6 +74,8 @@ interface Draft {
   pick: Candidate;
   quote: Quote;
   lines: string[];
+  /** Every negotiation run for this item, for the transcript view. */
+  negotiationIds: string[];
 }
 
 export const llmAgent: PurchasingAgent = {
@@ -99,7 +101,7 @@ export const llmAgent: PurchasingAgent = {
     const createdAt = new Date().toISOString();
     const orders: Order[] = [];
     let committed = ctx.spentLast7Days;
-    for (const { plan, pick, quote, lines } of drafts) {
+    for (const { plan, pick, quote, lines, negotiationIds } of drafts) {
       const decision = decideAutonomy(pick.totalPrice, ctx.settings, committed);
       if (decision.autoPurchase) committed += pick.totalPrice;
 
@@ -116,6 +118,7 @@ export const llmAgent: PurchasingAgent = {
         reasoning: [...lines, decision.line].join("\n"),
         signalIds: plan.signal ? [plan.signal.id] : [],
         negotiationId: pick.negotiation?.id,
+        negotiationIds: negotiationIds.length > 0 ? negotiationIds : undefined,
         quoteId: quote.id,
         status: decision.autoPurchase ? "approved" : "proposed",
         autoPurchased: decision.autoPurchase,
@@ -203,7 +206,7 @@ async function planItem(
     });
 
   const lines = explain(plan, pick, { open, walkedAway, skippedForQuality, due, stockOnArrival: stockOnArrivalFor(pick, item) });
-  return { draft: { plan, pick, quote, lines }, negotiations };
+  return { draft: { plan, pick, quote, lines, negotiationIds: negotiations.map((n) => n.id) }, negotiations };
 }
 
 function stockOnArrivalFor(c: Candidate, item: InventoryItem): number {
@@ -237,6 +240,8 @@ function sizeCandidate(product: Product, plan: Plan, raiseToShelfCap: boolean): 
     cappedBy = "budget";
   }
   if (quantity <= 0) return null;
+  // A cap that only undid a signal's raise didn't limit the normal order.
+  if (quantity === targetPacks) cappedBy = null;
 
   const amount = quantity * packSize;
   const listTotal = round2(quantity * product.unitPrice + product.shippingCost);
