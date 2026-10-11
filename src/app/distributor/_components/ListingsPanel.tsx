@@ -69,7 +69,7 @@ function ListingRow({
     price !== String(product.unitPrice) ||
     stock !== (product.stockQuantity === undefined ? "" : String(product.stockQuantity)) ||
     inStock !== product.inStock;
-  const valid = Number(price) > 0 && (stock === "" || Number(stock) >= 0);
+  const valid = Number(price) > 0 && (stock === "" || (Number.isInteger(Number(stock)) && Number(stock) >= 0));
 
   async function save() {
     setSaving(true);

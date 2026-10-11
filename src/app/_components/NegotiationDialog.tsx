@@ -17,7 +17,13 @@ export function NegotiationDialog({ order, onClose }: { order: OrderWithProduct;
   useEffect(() => {
     dialogRef.current?.showModal();
     let cancelled = false;
-    api.negotiationsForOrder(order.id).then(
+    // Until the per-order list route exists, fall back to the order's own (winning) negotiation.
+    const load = api.negotiationsForOrder(order.id).catch(() =>
+      api.negotiation(order.negotiationId!).then(({ negotiation, product }): NegotiationEntry[] => [
+        { negotiation, product, quote: null, distributor: order.distributor },
+      ]),
+    );
+    load.then(
       (list) => {
         if (cancelled) return;
         const isWinner = (e: NegotiationEntry) => e.negotiation.id === order.negotiationId;
@@ -30,7 +36,7 @@ export function NegotiationDialog({ order, onClose }: { order: OrderWithProduct;
     return () => {
       cancelled = true;
     };
-  }, [order.id, order.negotiationId]);
+  }, [order]);
 
   const itemName = order.product?.name ?? order.productId;
 

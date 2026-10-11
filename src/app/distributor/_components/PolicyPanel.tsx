@@ -73,7 +73,7 @@ export function PolicyPanel({
     inRange(draft.floorPct, 1, 100) &&
     inRange(draft.concessionPct, 0, 100) &&
     inRange(draft.highStockThreshold, 0, Infinity) &&
-    draft.tiers.every((t) => inRange(t.minQty, 1, Infinity) && inRange(t.discountPct, 0, 100));
+    draft.tiers.every((t) => inRange(t.minQty, 1, Infinity) && inRange(t.discountPct, 0, 99.9));
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -179,7 +179,7 @@ export function PolicyPanel({
                 <input
                   type="number"
                   min={0}
-                  max={100}
+                  max={99.9}
                   step="any"
                   value={tier.discountPct}
                   disabled={!editable}

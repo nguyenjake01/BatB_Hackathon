@@ -64,6 +64,10 @@ export const api = {
       (d) => d.negotiations,
     ),
 
+  /** GET /api/negotiations/[id] (owner: Jake): one negotiation, without its quote. */
+  negotiation: (id: string) =>
+    request<{ negotiation: Negotiation; product: Product | null }>(`/api/negotiations/${encodeURIComponent(id)}`),
+
   // ---- Signals (routes owned by Jake) ----
 
   signals: () => request<{ signals: Signal[] }>("/api/signals").then((d) => d.signals),
