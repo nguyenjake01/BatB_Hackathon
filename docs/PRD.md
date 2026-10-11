@@ -349,7 +349,7 @@ Branches: `supply`, `agent`, `ui`. PRs into `main`. Don't edit another person's 
 ## 16. Demo script (2 minutes max)
 
 1. **Problem (15s):** bakery owner pays Costco prices because better distributors are hard to reach and there's no time to track prices.
-2. **Setup (15s):** Square inventory loads; butter is 3 days from stockout. Set requirements and choose auto-buy under $150/order.
+2. **Setup (15s):** Square inventory loads; butter is 3 days from stockout. Set requirements and choose auto-buy under $250/order (on real data, chocolate chips at ~$219 auto-buys; butter at ~$310 waits for approval).
 3. **Agent run (20s):** agent decides what to buy and when; show reasoning for butter: quantity capped by shelf life, a news signal about rising prices so it buys early.
 4. **Negotiation (25s):** show the butter negotiation as a chat between the buyer agent and two distributor agents. One settles in round 3 below list price; the other hits its floor and walks away. The signed quote becomes the payment amount.
 5. **Payment (25s):** approve one order (and show one auto-purchased order); show the AUSD payment on Base Sepolia and the audit event on BSC Testnet in block explorers.
