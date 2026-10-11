@@ -11,7 +11,7 @@ Hackathon tracks: **Context.dev** (web scraping), **Agora AUSD** (agentic paymen
 | Who | Role | Branch | Task list |
 | --- | --- | --- | --- |
 | **Jake** | Person 1: Supply + Negotiation (Context.dev scraping, signals, distributor agents, negotiation, distributor APIs) | `supply` | [docs/roles/jake-supply-negotiation.md](docs/roles/jake-supply-negotiation.md) |
-| **Jason** | Person 2: Agent + Payments (decision logic, x402 AUSD payments, checkout, PurchaseLog on BSC) | `agent` | [docs/roles/jason-agent-payments.md](docs/roles/jason-agent-payments.md) |
+| **Jason** | Person 2: Agent + Payments (decision logic, x402 AUSD payments, checkout, PurchaseLog on BSC) | `agent` | [docs/roles/jason-agent-payments.md](docs/roles/jason-agent-payments.md) + **[handoff from Jake](docs/roles/jason-handoff.md)** |
 | **Stanley** | Person 3: Demand + UI (Square sandbox, dashboard, distributor portal, deploy, video, submission) | `ui` | [docs/roles/stanley-demand-ui.md](docs/roles/stanley-demand-ui.md) |
 
 ```bash
