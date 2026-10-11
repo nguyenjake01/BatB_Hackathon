@@ -1,4 +1,4 @@
-# Bakery Purchasing Agent
+# Bizaar
 
 **An AI purchasing agent that gets small businesses distributor prices instead of Costco prices, negotiates with distributors' own agents, and pays in AUSD stablecoin with an on-chain audit trail.**
 
