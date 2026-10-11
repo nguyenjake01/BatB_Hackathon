@@ -13,7 +13,15 @@ const BUY_EARLY_WORDS = [
   "shortage", "surge", "soar", "spike", "rising", "rise", "rises", "increase", "higher", "jump", "record high",
   "tight supply", "outbreak", "avian flu", "bird flu", "drought", "tariff", "scarce", "inflation",
 ];
-const WAIT_WORDS = ["drop", "drops", "fall", "falls", "decline", "plunge", "lower", "glut", "surplus", "ease", "eases", "cheaper", "slump", "oversupply"];
+const WAIT_WORDS = [
+  "drop", "drops", "fall", "falls", "decline", "declines", "plunge", "lower", "glut", "surplus", "ease", "eases", "cheaper",
+  "slump", "oversupply", "slip", "slips", "dip", "dips", "retreat", "soften", "tumble",
+];
+
+/** Social posts and forums aren't news sources. */
+const EXCLUDED_DOMAINS = [
+  "facebook.com", "instagram.com", "linkedin.com", "x.com", "twitter.com", "tiktok.com", "reddit.com", "pinterest.com", "youtube.com", "quora.com",
+];
 
 const countHits = (text: string, words: string[]) => words.filter((w) => new RegExp(`\\b${w}\\b`, "i").test(text)).length;
 
@@ -55,13 +63,21 @@ export function priceChangeSignals(previous: Product[], current: Product[], item
 
 /** Recent news per item (last month), keyword-classified. Up to 2 signals per item. */
 export async function newsSignals(itemName: string): Promise<Signal[]> {
-  const results = await searchWeb(`${itemName.toLowerCase()} prices wholesale supply news`, { freshness: "last_month", numResults: 10 });
+  const results = await searchWeb(`US wholesale ${itemName.toLowerCase()} prices news`, {
+    freshness: "last_month",
+    numResults: 10,
+    country: "us",
+    excludeDomains: EXCLUDED_DOMAINS,
+  });
   const detectedAt = new Date().toISOString();
   return results
     .filter((r) => r.relevance !== "low")
     .slice(0, 2)
     .map((r) => {
-      const summary = [r.title, r.description].filter(Boolean).join(": ").replace(/\s+/g, " ").slice(0, 280);
+      const title = r.title.trim();
+      const description = (r.description ?? "").trim();
+      const text = !description || description.toLowerCase().includes(title.toLowerCase()) ? description || title : `${title}: ${description}`;
+      const summary = text.replace(/\s+/g, " ").slice(0, 280);
       return {
         id: newId("sig"),
         itemName,

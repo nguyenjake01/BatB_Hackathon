@@ -161,6 +161,11 @@ export interface Order {
   reasoning: string;
   signalIds: string[];
   negotiationId?: string;
+  /**
+   * Every negotiation the agent ran for this order's item, including the ones that ended in
+   * no deal or lost on price. `negotiationId` is the one that became the order.
+   */
+  negotiationIds?: string[];
   quoteId?: string;
   status: OrderStatus;
   /** True when auto mode paid it without approval. */

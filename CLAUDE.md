@@ -7,7 +7,7 @@ Three people, each with their own coding agent, build this repo in parallel. **B
 | Current git branch | You work for | Role file (your task list) |
 |---|---|---|
 | `supply` | **Jake**, Person 1: Supply + Negotiation | `docs/roles/jake-supply-negotiation.md` |
-| `agent` | **Jason**, Person 2: Agent + Payments | `docs/roles/jason-agent-payments.md` |
+| `agent` | **Jason**, Person 2: Agent + Payments | `docs/roles/jason-agent-payments.md` **and `docs/roles/jason-handoff.md` (read first: integration notes from Jake)** |
 | `ui` | **Stanley**, Person 3: Demand + UI | `docs/roles/stanley-demand-ui.md` |
 
 Run `git branch --show-current`. If you're on `main` or the branch isn't listed, ask the user who they are and check out their branch (`git checkout <branch>`; branches exist on origin).

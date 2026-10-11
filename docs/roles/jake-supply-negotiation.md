@@ -15,17 +15,19 @@
 - Every `Product` must have `distributorId`, `distributorName`, `inStock`, `isRetailBaseline`, `sourceUrl`, `scrapedAt`. Titles must contain the item name (see `src/lib/matching.ts`).
 
 ## Status (updated by Jake's agent)
-Built and tested on mocks: negotiation engine + `negotiateAll` + unit tests (`npm test`), every Jake route, the Context.dev scraper (`src/lib/supply/real.ts`, config in `catalog.ts`), and signals (`signals.ts`).
-**Not yet verified live:** needs `CONTEXT_DEV_API_KEY` in `.env.local`. Then `USE_MOCKS_SUPPLY=false`, `POST /api/supply/refresh`, check `report.sources` (which sites Context.dev could read), fix search URLs or swap distributors in `catalog.ts`, and commit the generated `catalog-snapshot.json`.
-Extra routes: `GET /api/supply/status` (scrape report), `POST /api/negotiations` (run one negotiation for a listing: portal "test your agent", demo).
+Built: negotiation engine + `negotiateAll` + unit tests (`npm test`), every Jake route, Context.dev scraper, signals.
+**Live-verified 2026-10-11:** WebstaurantStore (search pages), Bakers Authority (collection pages), Walmart (retail baseline). 52 real listings committed in `src/lib/supply/catalog-snapshot.json`. Costco Business Delivery and Sysco To Go don't work (prices hidden), see PRD section 20.
+Coverage: flour, butter, sugar, yeast, chocolate chips have 2 distributors + baseline; eggs have 1 distributor (Bakers Authority, local delivery only) + baseline.
+Refresh: `POST /api/supply/refresh` (all, ~10 min at concurrency 1) or `?item=Butter`. Set `CONTEXT_DEV_CONCURRENCY` to the plan's limit. Status: `GET /api/supply/status`.
+Extra route: `POST /api/negotiations` (run one negotiation for a listing: portal "test your agent", demo).
 
 ## Tasks, in order
 ### P0 (Checkpoint 1 at 1:45: real scraped products in the app)
-- [ ] **First 15 min:** pick distributors with public prices (WebstaurantStore, Bakers Authority, ...) and a Costco-style retail baseline. Confirm Context.dev can read each page **before** writing scraper code.
+- [x] **First 15 min:** pick distributors with public prices (WebstaurantStore, Bakers Authority, ...) and a Costco-style retail baseline. Confirm Context.dev can read each page **before** writing scraper code.
 - [x] Implement `contextDevSupply.getProducts` / `refreshCatalog` in `src/lib/supply/real.ts`: flour, butter, sugar, eggs (+ yeast, chocolate chips if time), ≥2 real distributors each, plus baseline.
 - [x] Cache scraped results (store + a committed JSON snapshot so the demo doesn't depend on live scraping). Keep the real `sourceUrl` and `scrapedAt`.
 - [x] `POST /api/supply/refresh` route (re-scrape → `store.upsertProducts`).
-- [ ] Test with `USE_MOCKS_SUPPLY=false` while everything else stays mocked.
+- [x] Test with `USE_MOCKS_SUPPLY=false` while everything else stays mocked.
 
 ### P1 — start negotiation as soon as scraped data is cached (target 1:00)
 - [x] `negotiateAll` per PRD 7.6: distributor opening = list − volume tier; concede `concessionRate` (×1.5 above `highStockThreshold`); never below `floorPricePct × list`. Buyer opening = lowest per-unit list − 15%; concede 30%; walk away above `walkAwayUnitPrice`. Max 3 rounds; agree within 2% (split the difference); else `no_deal`. All candidates in parallel.
