@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bakery Purchasing Agent",
+  title: "Bizaar",
   description: "An AI purchasing agent that finds distributor deals and pays in AUSD once the owner approves.",
 };
 

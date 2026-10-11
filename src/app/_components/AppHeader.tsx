@@ -59,7 +59,7 @@ export function AppHeader() {
       <header className="border-b border-line bg-white/85">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-2.5 px-4 py-3 sm:px-6">
           <Logo />
-          <span className="text-[15px] font-semibold tracking-tight text-stone-900">Bakery Purchasing Agent</span>
+          <span className="text-[15px] font-semibold tracking-tight text-stone-900">Bizaar</span>
         </div>
       </header>
     );
@@ -70,7 +70,7 @@ export function AppHeader() {
         <Link href="/" className="flex min-w-0 items-center gap-2.5">
           <Logo />
           <span className="truncate text-[15px] font-semibold tracking-tight text-stone-900">
-            Bakery Purchasing Agent
+            Bizaar
           </span>
         </Link>
         <div className="flex shrink-0 items-center gap-3">
