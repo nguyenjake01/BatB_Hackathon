@@ -69,6 +69,10 @@ export const mockSupply: SupplySource = {
       (s) => ({ id: newId("sig"), ...s, detectedAt }),
     );
   },
+
+  refreshReport() {
+    return { scrapedAt: null, sources: [] };
+  },
 };
 
 const MOCK_SIGNALS: Omit<Signal, "id" | "detectedAt">[] = [
@@ -83,7 +87,7 @@ const MOCK_SIGNALS: Omit<Signal, "id" | "detectedAt">[] = [
     itemName: "Sugar",
     kind: "price_change",
     direction: "wait",
-    summary: "(Mock) Restaurant Depot cut granulated sugar 50 lb from $31.50 to $29.50.",
+    summary: "(Mock) Restaurant Depot raised granulated sugar 50 lb 7%, from $27.50 to $29.50.",
     sourceUrl: "https://example.com/mock-listings/depot-cane-sugar-50lb",
   },
 ];
