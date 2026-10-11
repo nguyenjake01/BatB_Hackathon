@@ -5,6 +5,7 @@ import type { AutonomySettings, InventoryItem, OrderWithProduct, Requirement } f
 import type { IntegrationModule } from "@/lib/config";
 import { api, type SettingsResponse } from "./api";
 import { AutonomyPanel } from "./AutonomyPanel";
+import { NegotiationDialog } from "./NegotiationDialog";
 import { money } from "./format";
 import { InventoryPanel } from "./InventoryPanel";
 import { OrderHistoryPanel } from "./OrderHistoryPanel";
@@ -46,6 +47,7 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
   // Fetched separately so a missing settings route doesn't hide the rest of the dashboard.
   const [settings, setSettings] = useState<SettingsResponse | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [negotiationOrder, setNegotiationOrder] = useState<OrderWithProduct | null>(null);
 
   const loadSettings = useCallback(async () => {
     try {
@@ -213,9 +215,14 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
           onRun={runAgent}
           onApprove={approve}
           onReject={reject}
+          onViewNegotiation={setNegotiationOrder}
         />
-        <OrderHistoryPanel orders={history} paymentsMocked={mockModes.payments} />
+        <OrderHistoryPanel orders={history} paymentsMocked={mockModes.payments} onViewNegotiation={setNegotiationOrder} />
       </div>
+
+      {negotiationOrder && (
+        <NegotiationDialog key={negotiationOrder.id} order={negotiationOrder} onClose={() => setNegotiationOrder(null)} />
+      )}
     </div>
   );
 }

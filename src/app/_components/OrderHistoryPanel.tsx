@@ -27,7 +27,15 @@ function TxHash({ hash, explorer, linkable }: { hash?: string; explorer: string;
   );
 }
 
-export function OrderHistoryPanel({ orders, paymentsMocked }: { orders: OrderWithProduct[]; paymentsMocked: boolean }) {
+export function OrderHistoryPanel({
+  orders,
+  paymentsMocked,
+  onViewNegotiation,
+}: {
+  orders: OrderWithProduct[];
+  paymentsMocked: boolean;
+  onViewNegotiation: (order: OrderWithProduct) => void;
+}) {
   // Savings only count for paid orders the agent priced against the retail baseline.
   const paid = orders.filter((o) => o.status === "paid" && o.baselinePrice !== undefined);
   const totalSaved = paid.reduce((sum, o) => sum + (savingsVsBaseline(o) ?? 0), 0);
@@ -80,6 +88,15 @@ export function OrderHistoryPanel({ orders, paymentsMocked }: { orders: OrderWit
                     <div className="text-xs text-stone-500">
                       {order.product?.name ?? "Unknown product"} × {order.quantity}
                     </div>
+                    {order.negotiationId && (
+                      <button
+                        type="button"
+                        onClick={() => onViewNegotiation(order)}
+                        className="text-xs font-medium text-amber-700 hover:underline"
+                      >
+                        View negotiation
+                      </button>
+                    )}
                   </td>
                   <td className="px-3 py-2.5 text-right tabular-nums">{money(order.totalPrice)}</td>
                   <td className="px-3 py-2.5 text-right tabular-nums">
