@@ -110,11 +110,21 @@ Full table in PRD section 10. Status today:
 | Route | Owner | Status |
 | --- | --- | --- |
 | `GET /api/inventory`, `GET/POST /api/requirements`, `GET /api/products` | shared | works (mocks) |
-| `POST /api/agent/run`, `GET /api/orders`, `POST /api/orders/[id]/approve` | Jason | works (mocks) |
-| `POST /api/distributors/[id]/checkout` | Jason | quote validation works; x402 TODO |
-| `POST /api/orders/[id]/reject`, `GET/PUT /api/settings` | Jason | to build (`rejectOrder` and store methods exist) |
+| `POST /api/agent/run`, `GET /api/orders`, `POST /api/orders/[id]/approve` | Jason | works (mock and real agent; real payments need a funded wallet, see below) |
+| `POST /api/distributors/[id]/checkout` | Jason | x402: answers 402 with AUSD requirements, then verifies and settles through the facilitator |
+| `POST /api/orders/[id]/reject`, `GET/PUT /api/settings` | Jason | works. Settings return `{ settings, spentLast7Days }`; `PUT` takes any of `mode`, `perOrderLimit`, `weeklyBudget` |
 | `POST /api/supply/refresh`, `GET /api/signals`, `POST /api/signals/refresh` | Jake | to build |
 | `GET /api/distributors`, `POST .../claim`, `PUT .../products/[productId]`, `GET .../orders`, `POST .../negotiate`, `GET/PUT .../policy`, `GET /api/negotiations/[id]` | Jake | to build (store methods exist) |
+
+## Real payments (x402 + audit log)
+
+With `USE_MOCKS_PAYMENTS=false`, approving an order makes the agent call the distributor checkout, get a 402, sign an ERC-3009 authorization for exactly the quoted amount of AUSD, and retry. The facilitator (`https://x402.org/facilitator` by default) submits the transfer on Base Sepolia and pays the gas. The purchase is then logged to `PurchaseLog` on BSC Testnet.
+
+```bash
+npm run wallet
+```
+
+This prints the agent wallet's address and balances and lists what is still missing. The wallet needs test AUSD on Base Sepolia (`npm run wallet -- faucet`, which itself needs a little Base Sepolia ETH for gas) and tBNB on BSC Testnet to deploy `PurchaseLog` and log purchases. AUSD's token metadata (decimals and its EIP-712 signing domain, which is "Agora Dollar", not the ERC-20 name "AUSD") is read from the chain.
 
 ## How the mock agent decides
 
