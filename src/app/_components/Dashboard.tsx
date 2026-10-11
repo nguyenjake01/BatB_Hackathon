@@ -13,8 +13,11 @@ import { ProposedOrdersPanel } from "./ProposedOrdersPanel";
 import { RequirementsPanel } from "./RequirementsPanel";
 import { SignalsPanel } from "./SignalsPanel";
 import { SummaryStrip } from "./SummaryStrip";
+import { TabBar, useHashTab, type Tab } from "./Tabs";
 
 type Banner = { kind: "error" | "warning" | "success"; text: string };
+
+type OwnerTab = "inventory" | "rules" | "agent" | "history";
 
 interface DashboardData {
   inventory: InventoryItem[] | null;
@@ -181,15 +184,24 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
   const history = orders.filter((o) => o.status !== "proposed");
   const modules = Object.keys(mockModes) as IntegrationModule[];
 
+  // Ordered like the demo: check stock, set the rules, run the agent, show the payments.
+  const tabs: Tab<OwnerTab>[] = [
+    { key: "inventory", label: "Inventory" },
+    { key: "rules", label: "Buying rules" },
+    { key: "agent", label: "Agent", count: proposed.length },
+    { key: "history", label: "Order history", count: history.length },
+  ];
+  const tab = useHashTab(tabs);
+
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl">Owner dashboard</h1>
-        <p className="mt-1 max-w-2xl text-sm text-stone-500">
+    <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
+      <header className="mb-10">
+        <h1 className="text-4xl font-normal tracking-[-0.025em] text-stone-900 sm:text-5xl">Owner dashboard</h1>
+        <p className="mt-3 max-w-2xl text-base text-stone-600">
           Your agent watches stock and distributor prices, negotiates the best deal, and pays in AUSD within the limits you set.
         </p>
         {/* Data provenance: judges and owners should see what is live and what is sample data. */}
-        <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-500">
+        <ul className="mt-5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-500">
           {modules.map((m) => (
             <li key={m} className="flex items-center gap-1.5">
               <span className={`size-1.5 rounded-full ${mockModes[m] ? "bg-stone-300" : "bg-emerald-500"}`} />
@@ -200,7 +212,7 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
       </header>
 
       {banner && (
-        <div className={`mb-6 flex items-start justify-between gap-3 rounded-xl border px-4 py-3 text-sm ${BANNER_STYLES[banner.kind]}`}>
+        <div className={`mb-6 flex items-start justify-between gap-3 rounded-lg border px-4 py-3 text-sm ${BANNER_STYLES[banner.kind]}`}>
           <span>{banner.text}</span>
           <button type="button" onClick={() => setBanner(null)} className="font-medium opacity-70 hover:opacity-100">
             Dismiss
@@ -208,29 +220,40 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-8">
         <SummaryStrip inventory={inventory} requirements={requirements} orders={orders} settings={settings} />
-        <div className="grid gap-6 lg:grid-cols-5">
-          <div className="min-w-0 lg:col-span-3">
-            <InventoryPanel inventory={inventory} requirements={requirements} live={!mockModes.square} />
-          </div>
-          <div className="grid min-w-0 content-start gap-6 lg:col-span-2">
+        <TabBar tabs={tabs} active={tab} />
+      </div>
+
+      {/* Every tab stays mounted (just hidden) so form drafts and loaded signals survive switching. */}
+      <div className="mt-6">
+        <div hidden={tab !== "inventory"}>
+          <InventoryPanel inventory={inventory} requirements={requirements} live={!mockModes.square} />
+        </div>
+        <div hidden={tab !== "rules"}>
+          <div className="grid items-start gap-6 lg:grid-cols-2">
             <AutonomyPanel data={settings} error={settingsError} onSave={saveSettings} />
             <RequirementsPanel requirements={requirements} inventory={inventory ?? []} onSave={saveRequirement} />
           </div>
         </div>
-        <SignalsPanel onError={(text) => setBanner({ kind: "error", text })} />
-        <ProposedOrdersPanel
-          orders={proposed}
-          hasRun={hasRun}
-          running={running}
-          busyId={busyId}
-          onRun={runAgent}
-          onApprove={approve}
-          onReject={reject}
-          onViewNegotiation={setNegotiationOrder}
-        />
-        <OrderHistoryPanel orders={history} paymentsMocked={mockModes.payments} onViewNegotiation={setNegotiationOrder} />
+        <div hidden={tab !== "agent"}>
+          <div className="grid gap-6">
+            <ProposedOrdersPanel
+              orders={proposed}
+              hasRun={hasRun}
+              running={running}
+              busyId={busyId}
+              onRun={runAgent}
+              onApprove={approve}
+              onReject={reject}
+              onViewNegotiation={setNegotiationOrder}
+            />
+            <SignalsPanel onError={(text) => setBanner({ kind: "error", text })} />
+          </div>
+        </div>
+        <div hidden={tab !== "history"}>
+          <OrderHistoryPanel orders={history} paymentsMocked={mockModes.payments} onViewNegotiation={setNegotiationOrder} />
+        </div>
       </div>
 
       {negotiationOrder && (

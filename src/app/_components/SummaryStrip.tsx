@@ -7,18 +7,18 @@ import { money, num, pct, savingsVsBaseline } from "./format";
 type Tone = "red" | "amber" | "green" | "neutral";
 
 const TONE_TEXT: Record<Tone, string> = {
-  red: "text-red-600",
-  amber: "text-amber-600",
-  green: "text-emerald-600",
-  neutral: "text-stone-900",
+  red: "text-red-400",
+  amber: "text-amber-300",
+  green: "text-emerald-400",
+  neutral: "text-white",
 };
 
 function Stat({ label, value, sub, tone = "neutral" }: { label: string; value: string; sub: string; tone?: Tone }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-line bg-white px-4 py-3.5 shadow-[0_1px_2px_rgba(41,37,36,0.04)]">
-      <div className="text-xs font-medium text-stone-500">{label}</div>
-      <div className={`mt-1 truncate text-2xl font-semibold tabular-nums tracking-tight ${TONE_TEXT[tone]}`}>{value}</div>
-      <div className="truncate text-xs text-stone-500">{sub}</div>
+    <div className="min-w-0 bg-stone-900 px-4 py-5 sm:px-6 sm:py-6">
+      <div className="text-sm text-stone-400">{label}</div>
+      <div className={`mt-2 truncate text-3xl font-normal sm:text-4xl tabular-nums tracking-[-0.02em] ${TONE_TEXT[tone]}`}>{value}</div>
+      <div className="mt-1 truncate text-sm text-stone-400">{sub}</div>
     </div>
   );
 }
@@ -47,7 +47,8 @@ export function SummaryStrip({
   const baseline = paid.reduce((sum, o) => sum + (o.baselinePrice ?? 0), 0);
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    // One dark band, like the black feature sections on runway.com; the 1px gaps draw the dividers.
+    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-stone-700 lg:grid-cols-4">
       <Stat
         label="Next to run out"
         value={soonest && Number.isFinite(soonestDays) ? `${num(soonestDays)} days` : "—"}

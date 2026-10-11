@@ -41,7 +41,7 @@ export function IncomingOrdersPanel({ distributor, paymentsMocked }: { distribut
         orders && (
           <div className="text-right">
             <div className="text-xs font-medium text-stone-500">AUSD received</div>
-            <div className="text-lg font-semibold tabular-nums text-emerald-700">{money(received)}</div>
+            <div className="text-2xl font-normal tabular-nums tracking-tight text-emerald-700">{money(received)}</div>
             <div className="text-xs text-stone-500">
               {paid.length} paid order{paid.length === 1 ? "" : "s"}
             </div>
@@ -54,21 +54,21 @@ export function IncomingOrdersPanel({ distributor, paymentsMocked }: { distribut
       ) : orders.length === 0 ? (
         <EmptyState>No orders yet.</EmptyState>
       ) : (
-        <div className="-mx-5 overflow-x-auto">
+        <div className="-mx-6 overflow-x-auto">
           <table className="w-full min-w-[640px] whitespace-nowrap text-sm">
             <thead>
               <tr className="border-b border-line text-left text-xs font-medium text-stone-500">
-                <th className="px-5 py-2 font-medium">Date</th>
+                <th className="px-6 py-2 font-medium">Date</th>
                 <th className="px-3 py-2 font-medium">Order</th>
                 <th className="px-3 py-2 text-right font-medium">Amount</th>
                 <th className="px-3 py-2 font-medium">Status</th>
-                <th className="px-5 py-2 font-medium">Payment tx</th>
+                <th className="px-6 py-2 font-medium">Payment tx</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-100">
+            <tbody className="divide-y divide-line">
               {orders.map((o) => (
                 <tr key={o.id}>
-                  <td className="whitespace-nowrap px-5 py-2.5 text-stone-600">{dateTime(o.createdAt)}</td>
+                  <td className="whitespace-nowrap px-6 py-2.5 text-stone-600">{dateTime(o.createdAt)}</td>
                   <td className="px-3 py-2.5">
                     {o.product?.name ?? o.productId} × {o.quantity}
                   </td>
@@ -77,7 +77,7 @@ export function IncomingOrdersPanel({ distributor, paymentsMocked }: { distribut
                     {o.status}
                     {o.autoPurchased && <span className="ml-1 text-xs normal-case text-violet-700">(auto-purchased)</span>}
                   </td>
-                  <td className="px-5 py-2.5">
+                  <td className="px-6 py-2.5">
                     <TxHash hash={o.txHash} explorer={EXPLORERS.payment} linkable={!paymentsMocked} />
                   </td>
                 </tr>

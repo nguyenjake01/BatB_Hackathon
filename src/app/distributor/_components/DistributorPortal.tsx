@@ -7,10 +7,13 @@ import { EmptyState, Loading, NotConnected, Panel } from "@/app/_components/Pane
 import { IncomingOrdersPanel } from "./IncomingOrdersPanel";
 import { ListingsPanel } from "./ListingsPanel";
 import { PolicyPanel } from "./PolicyPanel";
+import { TabBar, useHashTab, type Tab } from "@/app/_components/Tabs";
 import { inputClass } from "./styles";
 import { button, label as labelClass } from "@/app/_components/ui";
 
 type Banner = { kind: "error" | "success"; text: string };
+
+type DistributorTab = "listings" | "policy" | "orders";
 
 const WALLET_PATTERN = /^0x[0-9a-fA-F]{40}$/;
 
@@ -45,23 +48,29 @@ export function DistributorPortal({ paymentsMocked }: { paymentsMocked: boolean 
 
   const selected = distributors?.find((d) => d.id === selectedId) ?? null;
   const listings = products.filter((p) => p.distributorId === selectedId);
+  const tabs: Tab<DistributorTab>[] = [
+    { key: "listings", label: "Listings" },
+    { key: "policy", label: "Agent policy" },
+    { key: "orders", label: "Incoming orders" },
+  ];
+  const tab = useHashTab(tabs);
 
   function report(kind: Banner["kind"], text: string) {
     setBanner({ kind, text });
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl">Distributor portal</h1>
-        <p className="mt-1 max-w-2xl text-sm text-stone-500">
+    <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
+      <header className="mb-10">
+        <h1 className="text-4xl font-normal tracking-[-0.025em] text-stone-900 sm:text-5xl">Distributor portal</h1>
+        <p className="mt-3 max-w-2xl text-base text-stone-600">
           Claim your listings, set prices and stock, tell your agent how far it may negotiate, and see AUSD payments.
         </p>
       </header>
 
       {banner && (
         <div
-          className={`mb-6 flex items-start justify-between gap-3 rounded-xl border px-4 py-3 text-sm ${
+          className={`mb-6 flex items-start justify-between gap-3 rounded-lg border px-4 py-3 text-sm ${
             banner.kind === "error" ? "border-red-200 bg-red-50 text-red-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"
           }`}
         >
@@ -108,24 +117,32 @@ export function DistributorPortal({ paymentsMocked }: { paymentsMocked: boolean 
         </Panel>
 
         {selected && (
-          <>
-            <ListingsPanel
-              distributor={selected}
-              listings={listings}
-              onSaved={async (p) => {
-                report("success", `Saved ${p.name}.`);
-                await load();
-              }}
-              onError={(text) => report("error", text)}
-            />
-            <PolicyPanel
-              key={selected.id}
-              distributor={selected}
-              onSaved={() => report("success", "Agent policy saved. It applies to the next negotiation.")}
-              onError={(text) => report("error", text)}
-            />
-            <IncomingOrdersPanel key={`orders-${selected.id}`} distributor={selected} paymentsMocked={paymentsMocked} />
-          </>
+          <div className="mt-4 grid gap-6">
+            <TabBar tabs={tabs} active={tab} />
+            {/* Tabs stay mounted (just hidden) so unsaved edits survive switching. */}
+            <div hidden={tab !== "listings"}>
+              <ListingsPanel
+                distributor={selected}
+                listings={listings}
+                onSaved={async (p) => {
+                  report("success", `Saved ${p.name}.`);
+                  await load();
+                }}
+                onError={(text) => report("error", text)}
+              />
+            </div>
+            <div hidden={tab !== "policy"}>
+              <PolicyPanel
+                key={selected.id}
+                distributor={selected}
+                onSaved={() => report("success", "Agent policy saved. It applies to the next negotiation.")}
+                onError={(text) => report("error", text)}
+              />
+            </div>
+            <div hidden={tab !== "orders"}>
+              <IncomingOrdersPanel key={`orders-${selected.id}`} distributor={selected} paymentsMocked={paymentsMocked} />
+            </div>
+          </div>
         )}
       </div>
     </div>

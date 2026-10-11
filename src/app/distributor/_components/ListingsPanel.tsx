@@ -31,7 +31,7 @@ export function ListingsPanel({
       {listings.length === 0 ? (
         <EmptyState>No listings for {distributor.name}.</EmptyState>
       ) : (
-        <ul className="divide-y divide-stone-100">
+        <ul className="divide-y divide-line">
           {listings.map((p) => (
             <ListingRow
               key={`${p.id}-${p.unitPrice}-${p.stockQuantity}-${p.inStock}`}
@@ -120,7 +120,7 @@ function ListingRow({
           checked={inStock}
           disabled={!editable}
           onChange={(e) => setInStock(e.target.checked)}
-          className="accent-amber-600"
+          className="accent-stone-900"
         />
         <span className="text-stone-700">In stock</span>
       </label>

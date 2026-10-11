@@ -74,7 +74,7 @@ export function SignalsPanel({ onError }: { onError: (text: string) => void }) {
       ) : sorted.length === 0 ? (
         <EmptyState>No signals yet. Click “Check for signals” to scan prices and supply news.</EmptyState>
       ) : (
-        <ul className="divide-y divide-stone-100">
+        <ul className="divide-y divide-line">
           {sorted.map((s) => {
             const direction = DIRECTION[s.direction];
             return (
@@ -86,7 +86,7 @@ export function SignalsPanel({ onError }: { onError: (text: string) => void }) {
                   </p>
                   <p className="text-xs text-stone-500">
                     {KIND_LABEL[s.kind]} · {dateTime(s.detectedAt)} ·{" "}
-                    <a href={s.sourceUrl} target="_blank" rel="noreferrer" className="text-amber-700 hover:underline">
+                    <a href={s.sourceUrl} target="_blank" rel="noreferrer" className="text-accent hover:underline">
                       Source ↗
                     </a>
                   </p>

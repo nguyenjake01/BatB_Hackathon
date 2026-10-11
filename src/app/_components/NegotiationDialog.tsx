@@ -45,11 +45,11 @@ export function NegotiationDialog({ order, onClose }: { order: OrderWithProduct;
       ref={dialogRef}
       onClose={onClose}
       onClick={(e) => e.target === dialogRef.current && dialogRef.current.close()}
-      className="m-auto w-[min(64rem,calc(100vw-2rem))] rounded-xl p-0 shadow-xl backdrop:bg-stone-900/40"
+      className="m-auto w-[min(64rem,calc(100vw-2rem))] rounded-2xl p-0 shadow-2xl backdrop:bg-stone-900/50 backdrop:backdrop-blur-sm"
     >
       <div className="flex items-start justify-between gap-3 border-b border-stone-100 px-5 py-4">
         <div>
-          <h2 className="text-base font-semibold text-stone-900">Agent negotiations</h2>
+          <h2 className="text-xl font-medium tracking-[-0.01em] text-stone-900">Agent negotiations</h2>
           <p className="text-sm text-stone-500">
             {itemName} × {order.quantity}
             {entries && entries.length > 0 && (
@@ -133,7 +133,7 @@ function NegotiationColumn({ entry, won }: { entry: NegotiationEntry; won: boole
             <li key={i} className={`flex ${buyer ? "justify-start" : "justify-end"}`}>
               <div
                 className={`max-w-[90%] rounded-2xl px-3.5 py-2 text-sm ${
-                  buyer ? "rounded-bl-sm bg-amber-50 text-stone-800" : "rounded-br-sm bg-stone-100 text-stone-800"
+                  buyer ? "rounded-bl-sm bg-accent/10 text-stone-800" : "rounded-br-sm bg-stone-100 text-stone-800"
                 }`}
               >
                 <div className="mb-0.5 flex items-baseline justify-between gap-3 text-xs text-stone-500">

@@ -87,7 +87,7 @@ function OrderCard({
   const shown = expanded ? lines : lines.slice(0, REASONING_PREVIEW_LINES);
 
   return (
-    <li className="flex min-w-0 flex-col rounded-xl border border-line bg-white p-4 transition-shadow hover:shadow-md">
+    <li className="flex min-w-0 flex-col rounded-xl bg-white p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -110,7 +110,7 @@ function OrderCard({
           )}
         </div>
         <div className="shrink-0 text-right">
-          <div className="text-xl font-semibold tabular-nums tracking-tight text-stone-900">{money(order.totalPrice)}</div>
+          <div className="text-2xl font-normal tabular-nums tracking-tight text-stone-900">{money(order.totalPrice)}</div>
           <div className="text-xs font-medium text-stone-400">AUSD</div>
           {order.listTotal !== undefined && order.listTotal > order.totalPrice && (
             <div className="text-xs tabular-nums text-stone-400 line-through">{money(order.listTotal)}</div>
@@ -118,12 +118,12 @@ function OrderCard({
         </div>
       </div>
 
-      <div className="mt-3 flex-1 rounded-lg bg-stone-50 p-3">
+      <div className="mt-4 flex-1 rounded-lg bg-surface p-3">
         <div className="mb-1.5 text-xs font-medium uppercase tracking-wide text-stone-400">Why the agent chose this</div>
         <ul className="grid gap-1 text-sm leading-relaxed text-stone-700">
           {shown.map((line, i) => (
             <li key={i} className="flex gap-2">
-              <span className="mt-2 size-1 shrink-0 rounded-full bg-amber-500" />
+              <span className="mt-2 size-1 shrink-0 rounded-full bg-accent" />
               <span>{line}</span>
             </li>
           ))}

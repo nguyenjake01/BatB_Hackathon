@@ -222,7 +222,7 @@ export function PolicyPanel({
             checked={draft.autoAccept}
             disabled={!editable}
             onChange={(e) => set({ autoAccept: e.target.checked })}
-            className="accent-amber-600"
+            className="accent-stone-900"
           />
           <span className="text-stone-700">Auto-accept deals within these limits</span>
         </label>
