@@ -50,8 +50,10 @@ export interface Store {
 
   getNegotiation(id: string): Promise<Negotiation | undefined>;
   saveNegotiations(negotiations: Negotiation[]): Promise<void>;
+  listNegotiations(): Promise<Negotiation[]>;
   getQuote(id: string): Promise<Quote | undefined>;
   saveQuotes(quotes: Quote[]): Promise<void>;
+  listQuotes(): Promise<Quote[]>;
 
   /** Newest first. */
   listOrders(): Promise<Order[]>;
@@ -217,6 +219,10 @@ class MemoryStore implements Store {
     for (const n of negotiations) this.negotiations.set(n.id, structuredClone(n));
   }
 
+  async listNegotiations() {
+    return structuredClone([...this.negotiations.values()]);
+  }
+
   async getQuote(id: string) {
     const quote = this.quotes.get(id);
     return quote && structuredClone(quote);
@@ -224,6 +230,10 @@ class MemoryStore implements Store {
 
   async saveQuotes(quotes: Quote[]) {
     for (const q of quotes) this.quotes.set(q.id, structuredClone(q));
+  }
+
+  async listQuotes() {
+    return structuredClone([...this.quotes.values()]);
   }
 
   async listOrders() {
