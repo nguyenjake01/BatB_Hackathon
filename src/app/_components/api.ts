@@ -24,6 +24,15 @@ export interface NegotiationEntry {
   distributor: Distributor | null;
 }
 
+/** GET /api/wallet: the agent wallet purchases are paid from. Null in payments test mode. */
+export interface WalletInfo {
+  address: string;
+  /** Live AUSD balance (1 AUSD = 1 USD). */
+  ausd: number;
+  network: string;
+  explorerUrl: string;
+}
+
 /** Shape of GET/PUT /api/settings (owner: Jason). `spentThisWeek` is USD paid in the last 7 days. */
 export interface SettingsResponse {
   settings: AutonomySettings;
@@ -124,6 +133,8 @@ export const api = {
     ),
 
   settings: () => request<SettingsResponse>("/api/settings"),
+
+  wallet: () => request<{ wallet: WalletInfo | null }>("/api/wallet").then((d) => d.wallet),
 
   saveSettings: (patch: Partial<AutonomySettings>) =>
     request<SettingsResponse>("/api/settings", { method: "PUT", body: JSON.stringify(patch) }),

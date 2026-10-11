@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { AutonomySettings, InventoryItem, OrderWithProduct, Requirement } from "@/types";
 import type { IntegrationModule } from "@/lib/config";
-import { api, type SettingsResponse } from "./api";
+import { api, type SettingsResponse, type WalletInfo } from "./api";
 import { AutonomyPanel } from "./AutonomyPanel";
 import { NegotiationDialog } from "./NegotiationDialog";
 import { money } from "./format";
@@ -62,6 +62,8 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
   const [settings, setSettings] = useState<SettingsResponse | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [negotiationOrder, setNegotiationOrder] = useState<OrderWithProduct | null>(null);
+  // undefined: loading or unavailable; null: payments in test mode (no real wallet).
+  const [wallet, setWallet] = useState<WalletInfo | null | undefined>(undefined);
 
   const loadSettings = useCallback(async () => {
     try {
@@ -82,7 +84,8 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
 
   async function refresh() {
     // Settings include "spent this week", which changes when orders are paid.
-    const [data] = await Promise.all([fetchDashboard(), loadSettings()]);
+    // The wallet balance drops when an order is paid.
+    const [data] = await Promise.all([fetchDashboard(), loadSettings(), api.wallet().then(setWallet, () => {})]);
     apply(data);
   }
 
@@ -91,6 +94,12 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
     fetchDashboard().then((data) => {
       if (!cancelled) apply(data);
     });
+    api.wallet().then(
+      (w) => {
+        if (!cancelled) setWallet(w);
+      },
+      () => {},
+    );
     api.settings().then(
       (data) => {
         if (!cancelled) setSettings(data);
@@ -221,7 +230,7 @@ export function Dashboard({ mockModes }: { mockModes: Record<IntegrationModule, 
       )}
 
       <div className="grid grid-cols-1 gap-8">
-        <SummaryStrip inventory={inventory} requirements={requirements} orders={orders} settings={settings} />
+        <SummaryStrip inventory={inventory} requirements={requirements} orders={orders} settings={settings} wallet={wallet} />
         <TabBar tabs={tabs} active={tab} />
       </div>
 
