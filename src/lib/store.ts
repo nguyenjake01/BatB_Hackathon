@@ -319,8 +319,13 @@ class MemoryStore implements Store {
 // Kept on globalThis so dev hot reloads and separate route bundles share one instance.
 const globalForStore = globalThis as unknown as { __store?: Store };
 
-// STORE=supabase (set on Vercel) persists to Supabase so every serverless instance shares data.
+// Supabase is the default wherever its server keys are set, so every user action is shared and
+// survives restarts (all Vercel instances, every teammate). Without the keys, or with
+// STORE=memory, it falls back to the in-memory store.
+const useSupabase =
+  process.env.STORE !== "memory" && Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+
 export const store: Store = (globalForStore.__store ??=
-  process.env.STORE === "supabase"
+  useSupabase
     ? supabaseBacked(MemoryStore.fromSnapshot, (s: MemoryStore) => s.toSnapshot())
     : new MemoryStore());

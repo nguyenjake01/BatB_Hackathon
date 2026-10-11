@@ -2,6 +2,7 @@
 
 import type { Order, OrderWithProduct } from "@/types";
 import { runAgent } from "@/lib/agent";
+import { isMockMode } from "@/lib/config";
 import { errorMessage, HttpError } from "@/lib/http";
 import { logPurchaseOnChain, payOrder } from "@/lib/payments";
 import { getInventory } from "@/lib/square";
@@ -100,6 +101,10 @@ async function payAndLog(order: Order): Promise<{ order: Order; warning?: string
     await store.updateOrder(order.id, { status: "failed", error: errorMessage(error) });
     throw error;
   }
+
+  // The BSC audit log is optional for now: skip it quietly until the PurchaseLog contract is
+  // deployed and PURCHASE_LOG_CONTRACT_ADDRESS is set (mock payments still return a fake hash).
+  if (!isMockMode("payments") && !process.env.PURCHASE_LOG_CONTRACT_ADDRESS) return { order: current };
 
   try {
     const auditTxHash = await logPurchaseOnChain(current);

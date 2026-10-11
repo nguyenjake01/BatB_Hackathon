@@ -1,5 +1,6 @@
 // Supabase persistence for the store, so data survives restarts and is shared by every
-// Vercel instance. Opt-in with STORE=supabase; locally the plain in-memory store stays.
+// Vercel instance and every user. On by default when the Supabase server keys are set
+// (see store.ts); STORE=memory forces the plain in-memory store.
 //
 // The whole store is one JSON document in the `app_state` table. Each store call loads it,
 // runs the normal in-memory logic on it, and (for writes) saves it back with an optimistic
