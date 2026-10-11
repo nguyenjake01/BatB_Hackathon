@@ -1,11 +1,25 @@
 // Typed client for our API routes.
 
-import type { AutonomySettings, InventoryItem, Negotiation, OrderWithProduct, Quote, Requirement } from "@/types";
+import type {
+  AutonomySettings,
+  Distributor,
+  InventoryItem,
+  Negotiation,
+  OrderWithProduct,
+  Product,
+  Quote,
+  Requirement,
+} from "@/types";
 
-/** Shape of GET /api/negotiations/[id] (owner: Jake). `quote` is set when the agents agreed. */
-export interface NegotiationResponse {
+/**
+ * One entry of GET /api/negotiations?orderId=… (owner: Jake): every negotiation the agent ran
+ * for that order, including the ones that ended in no deal. `quote` is set when the agents agreed.
+ */
+export interface NegotiationEntry {
   negotiation: Negotiation;
   quote: Quote | null;
+  product: Product | null;
+  distributor: Distributor | null;
 }
 
 /** Shape of GET/PUT /api/settings (owner: Jason). `spentThisWeek` is USD paid in the last 7 days. */
@@ -43,7 +57,10 @@ export const api = {
   reject: (id: string) =>
     request<{ order: OrderWithProduct }>(`/api/orders/${encodeURIComponent(id)}/reject`, { method: "POST" }),
 
-  negotiation: (id: string) => request<NegotiationResponse>(`/api/negotiations/${encodeURIComponent(id)}`),
+  negotiationsForOrder: (orderId: string) =>
+    request<{ negotiations: NegotiationEntry[] }>(`/api/negotiations?orderId=${encodeURIComponent(orderId)}`).then(
+      (d) => d.negotiations,
+    ),
 
   settings: () => request<SettingsResponse>("/api/settings"),
 
