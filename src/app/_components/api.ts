@@ -3,6 +3,7 @@
 import type {
   AutonomySettings,
   Distributor,
+  DistributorPolicy,
   InventoryItem,
   Negotiation,
   OrderWithProduct,
@@ -60,6 +61,40 @@ export const api = {
   negotiationsForOrder: (orderId: string) =>
     request<{ negotiations: NegotiationEntry[] }>(`/api/negotiations?orderId=${encodeURIComponent(orderId)}`).then(
       (d) => d.negotiations,
+    ),
+
+  // ---- Distributor portal (routes owned by Jake) ----
+
+  products: () => request<{ products: Product[] }>("/api/products").then((d) => d.products),
+
+  distributors: () => request<{ distributors: Distributor[] }>("/api/distributors").then((d) => d.distributors),
+
+  claim: (distributorId: string, payoutWallet: string) =>
+    request<{ distributor: Distributor }>(`/api/distributors/${encodeURIComponent(distributorId)}/claim`, {
+      method: "POST",
+      body: JSON.stringify({ payoutWallet }),
+    }).then((d) => d.distributor),
+
+  updateProduct: (distributorId: string, productId: string, patch: Pick<Product, "unitPrice" | "stockQuantity" | "inStock">) =>
+    request<{ product: Product }>(
+      `/api/distributors/${encodeURIComponent(distributorId)}/products/${encodeURIComponent(productId)}`,
+      { method: "PUT", body: JSON.stringify(patch) },
+    ).then((d) => d.product),
+
+  policy: (distributorId: string) =>
+    request<{ policy: DistributorPolicy }>(`/api/distributors/${encodeURIComponent(distributorId)}/policy`).then(
+      (d) => d.policy,
+    ),
+
+  savePolicy: (policy: DistributorPolicy) =>
+    request<{ policy: DistributorPolicy }>(`/api/distributors/${encodeURIComponent(policy.distributorId)}/policy`, {
+      method: "PUT",
+      body: JSON.stringify(policy),
+    }).then((d) => d.policy),
+
+  distributorOrders: (distributorId: string) =>
+    request<{ orders: OrderWithProduct[] }>(`/api/distributors/${encodeURIComponent(distributorId)}/orders`).then(
+      (d) => d.orders,
     ),
 
   settings: () => request<SettingsResponse>("/api/settings"),

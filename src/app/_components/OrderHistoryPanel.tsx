@@ -10,12 +10,12 @@ const STATUS_BADGE: Record<OrderStatus, string> = {
   failed: "bg-red-100 text-red-800",
 };
 
-const EXPLORERS = {
+export const EXPLORERS = {
   payment: "https://sepolia.basescan.org/tx/",
   audit: "https://testnet.bscscan.com/tx/",
 };
 
-function TxHash({ hash, explorer, linkable }: { hash?: string; explorer: string; linkable: boolean }) {
+export function TxHash({ hash, explorer, linkable }: { hash?: string; explorer: string; linkable: boolean }) {
   if (!hash) return <span className="text-stone-400">—</span>;
   const label = <code className="font-mono text-xs">{shortHash(hash)}</code>;
   return linkable ? (
