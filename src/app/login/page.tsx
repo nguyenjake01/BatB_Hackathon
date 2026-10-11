@@ -51,15 +51,15 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto w-full max-w-md px-4 py-12 sm:py-16">
-      <h1 className="text-center text-2xl font-semibold tracking-tight text-stone-900">
+      <h1 className="text-center text-4xl font-normal tracking-[-0.025em] text-stone-900">
         {mode === "signin" ? "Welcome back" : "Create your account"}
       </h1>
-      <p className="mt-1 text-center text-sm text-stone-500">
+      <p className="mt-3 text-center text-base text-stone-600">
         {mode === "signin" ? "Sign in to your bakery or distributor account." : "For small businesses and the distributors who supply them."}
       </p>
 
-      <div className="mt-6 rounded-2xl border border-line bg-white p-6 shadow-[0_1px_2px_rgba(41,37,36,0.04)]">
-        <div className="mb-5 grid grid-cols-2 rounded-lg bg-stone-100 p-0.5 text-sm">
+      <div className="mt-8 rounded-2xl bg-surface p-6">
+        <div className="mb-5 grid grid-cols-2 gap-2 text-sm">
           {(["signin", "signup"] as const).map((m) => (
             <button
               key={m}
@@ -68,8 +68,8 @@ export default function LoginPage() {
                 setMode(m);
                 setError(null);
               }}
-              className={`rounded-md py-1.5 font-medium transition-colors ${
-                mode === m ? "bg-white text-stone-900 shadow-sm" : "text-stone-500 hover:text-stone-800"
+              className={`rounded-md py-1.5 font-semibold transition-colors ${
+                mode === m ? "bg-stone-800 text-white" : "bg-white text-stone-900 hover:bg-stone-50"
               }`}
             >
               {m === "signin" ? "Sign in" : "Create account"}
@@ -86,7 +86,7 @@ export default function LoginPage() {
                   <label
                     key={r.value}
                     className={`cursor-pointer rounded-xl border p-3 text-sm transition-colors ${
-                      role === r.value ? "border-amber-400 bg-amber-50/70 ring-1 ring-amber-200" : "border-line hover:bg-stone-50"
+                      role === r.value ? "border-stone-900 bg-white ring-1 ring-stone-900" : "border-line hover:bg-white/60"
                     }`}
                   >
                     <input

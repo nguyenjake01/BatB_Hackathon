@@ -47,19 +47,19 @@ export function InventoryPanel({
       ) : inventory.length === 0 ? (
         <EmptyState>No inventory items.</EmptyState>
       ) : (
-        <div className="-mx-5 overflow-x-auto">
+        <div className="-mx-6 overflow-x-auto">
           <table className="w-full min-w-[560px] whitespace-nowrap text-sm">
             <thead>
               <tr className="border-b border-line text-left text-xs font-medium text-stone-500">
-                <th className="px-5 pb-2 font-medium">Item</th>
+                <th className="px-6 pb-2 font-medium">Item</th>
                 <th className="px-2.5 pb-2 text-right font-medium">On hand</th>
                 <th className="px-2.5 pb-2 text-right font-medium">Daily use</th>
                 <th className="px-2.5 pb-2 font-medium">Days left</th>
                 <th className="px-2.5 pb-2 text-right font-medium">Minimum</th>
-                <th className="px-5 pb-2 font-medium">Status</th>
+                <th className="px-6 pb-2 font-medium">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-100">
+            <tbody className="divide-y divide-line">
               {[...inventory]
                 .sort((a, b) => daysLeft(a) - daysLeft(b))
                 .map((item) => {
@@ -68,7 +68,7 @@ export function InventoryPanel({
                   const days = daysLeft(item);
                   return (
                     <tr key={item.sku}>
-                      <td className="px-5 py-3">
+                      <td className="px-6 py-3">
                         <div className="font-medium text-stone-900">{item.name}</div>
                         <div className="font-mono text-[11px] text-stone-400">{item.sku}</div>
                       </td>
@@ -76,7 +76,7 @@ export function InventoryPanel({
                       <td className="px-2.5 py-3 text-right tabular-nums text-stone-600">{qty(item.dailyUsage, item.unit)}/day</td>
                       <td className="px-2.5 py-3">
                         <div className="flex items-center gap-2">
-                          <div className="h-1.5 w-14 overflow-hidden rounded-full bg-stone-100">
+                          <div className="h-1.5 w-14 overflow-hidden rounded-full bg-white">
                             <div
                               className={`h-full rounded-full ${style.bar}`}
                               style={{ width: `${Math.min(1, (Number.isFinite(days) ? days : RUNWAY_FULL_DAYS) / RUNWAY_FULL_DAYS) * 100}%` }}
@@ -88,7 +88,7 @@ export function InventoryPanel({
                       <td className="px-2.5 py-3 text-right tabular-nums text-stone-600">
                         {requirement ? qty(requirement.minStockLevel, item.unit) : "—"}
                       </td>
-                      <td className="px-5 py-3">
+                      <td className="px-6 py-3">
                         <span className={style.pill}>{style.label}</span>
                       </td>
                     </tr>

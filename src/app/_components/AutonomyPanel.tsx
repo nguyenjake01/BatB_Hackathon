@@ -63,7 +63,7 @@ export function AutonomyPanel({
             <label
               key={m.value}
               className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm transition-colors ${
-                form.mode === m.value ? "border-amber-400 bg-amber-50/70 ring-1 ring-amber-200" : "border-line hover:bg-stone-50"
+                form.mode === m.value ? "border-stone-900 bg-white ring-1 ring-stone-900" : "border-line hover:bg-white/60"
               }`}
             >
               <input
@@ -72,7 +72,7 @@ export function AutonomyPanel({
                 value={m.value}
                 checked={form.mode === m.value}
                 onChange={() => setDraft({ ...form, mode: m.value })}
-                className="mt-0.5 accent-amber-600"
+                className="mt-0.5 accent-stone-900"
               />
               <span>
                 <span className="block font-medium text-stone-900">{m.label}</span>
@@ -116,9 +116,9 @@ export function AutonomyPanel({
               {money(spentThisWeek)} of {money(settings.weeklyBudget)} · {money(remaining)} left
             </span>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-stone-100">
+          <div className="h-2 overflow-hidden rounded-full bg-white">
             <div
-              className={`h-full rounded-full ${usedPct >= 1 ? "bg-red-500" : "bg-amber-500"}`}
+              className={`h-full rounded-full ${usedPct >= 1 ? "bg-red-500" : "bg-stone-900"}`}
               style={{ width: `${usedPct * 100}%` }}
             />
           </div>

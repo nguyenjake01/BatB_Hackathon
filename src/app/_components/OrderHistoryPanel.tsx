@@ -20,7 +20,7 @@ export function TxHash({ hash, explorer, linkable }: { hash?: string; explorer: 
   if (!hash) return <span className="text-stone-400">—</span>;
   const label = <code className="font-mono text-xs">{shortHash(hash)}</code>;
   return linkable ? (
-    <a href={`${explorer}${hash}`} target="_blank" rel="noreferrer" title={hash} className="inline-flex items-center gap-1 text-amber-700 hover:underline">
+    <a href={`${explorer}${hash}`} target="_blank" rel="noreferrer" title={hash} className="inline-flex items-center gap-1 text-accent hover:underline">
       {label}
       <span aria-hidden>↗</span>
     </a>
@@ -55,7 +55,7 @@ export function OrderHistoryPanel({
         paid.length > 0 && (
           <div className="text-right">
             <div className="text-xs font-medium text-stone-500">Saved vs retail</div>
-            <div className={`text-lg font-semibold tabular-nums ${totalSaved >= 0 ? "text-emerald-700" : "text-red-700"}`}>
+            <div className={`text-2xl font-normal tabular-nums tracking-tight ${totalSaved >= 0 ? "text-emerald-700" : "text-red-700"}`}>
               {money(totalSaved)}
               {totalBaseline > 0 && <span className="ml-1 text-sm font-medium">({pct(totalSaved / totalBaseline)})</span>}
             </div>
@@ -66,25 +66,25 @@ export function OrderHistoryPanel({
       {orders.length === 0 ? (
         <EmptyState>No orders yet. Approved and auto-purchased orders show up here.</EmptyState>
       ) : (
-        <div className="-mx-5 overflow-x-auto">
+        <div className="-mx-6 overflow-x-auto">
           <table className="w-full min-w-[860px] whitespace-nowrap text-sm">
             <thead>
               <tr className="border-b border-line text-left text-xs font-medium text-stone-500">
-                <th className="px-5 pb-2 font-medium">Date</th>
+                <th className="px-6 pb-2 font-medium">Date</th>
                 <th className="px-3 pb-2 font-medium">Order</th>
                 <th className="px-3 pb-2 text-right font-medium">Total</th>
                 <th className="px-3 pb-2 text-right font-medium">Saved vs retail</th>
                 <th className="px-3 pb-2 font-medium">Status</th>
                 <th className="px-3 pb-2 font-medium">Payment tx</th>
-                <th className="px-5 pb-2 font-medium">Audit tx</th>
+                <th className="px-6 pb-2 font-medium">Audit tx</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-100">
+            <tbody className="divide-y divide-line">
               {orders.map((order) => {
                 const saved = savingsVsBaseline(order);
                 return (
                 <tr key={order.id}>
-                  <td className="whitespace-nowrap px-5 py-3 text-stone-600">{dateTime(order.createdAt)}</td>
+                  <td className="whitespace-nowrap px-6 py-3 text-stone-600">{dateTime(order.createdAt)}</td>
                   <td className="px-3 py-3">
                     <div className="font-medium text-stone-900">{order.product?.distributorName ?? order.productId}</div>
                     <div className="text-xs text-stone-500">
@@ -121,7 +121,7 @@ export function OrderHistoryPanel({
                   <td className="px-3 py-3">
                     <TxHash hash={order.txHash} explorer={EXPLORERS.payment} linkable={!paymentsMocked} />
                   </td>
-                  <td className="px-5 py-3">
+                  <td className="px-6 py-3">
                     <TxHash hash={order.auditTxHash} explorer={EXPLORERS.audit} linkable={!paymentsMocked} />
                   </td>
                 </tr>

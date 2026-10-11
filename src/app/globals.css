@@ -5,10 +5,29 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* Warm "bakery" neutrals for the page; cards stay white. */
+/*
+ * Runway-style look: white page, flat light-gray cards, hairline dividers,
+ * near-black ink and one electric-blue accent.
+ */
 @theme {
-  --color-canvas: #f7f4ee;
-  --color-line: #e8e2d8;
+  --color-canvas: #ffffff;
+  --color-surface: #f4f4f4;
+  --color-line: #dcdcdc;
+  --color-accent: #2a4eef;
+  --color-accent-strong: #1032cf;
+
+  /* Neutral (not warm) grays; overriding stone restyles every component at once. */
+  --color-stone-50: #f9f9f9;
+  --color-stone-100: #efefef;
+  --color-stone-200: #e2e2e2;
+  --color-stone-300: #cfcfcf;
+  --color-stone-400: #a3a3a3;
+  --color-stone-500: #7c7c7c;
+  --color-stone-600: #5c5c5c;
+  --color-stone-700: #404040;
+  --color-stone-800: #262626;
+  --color-stone-900: #0c0c0c;
+  --color-stone-950: #050505;
 }
 
 body {
@@ -18,5 +37,5 @@ body {
 }
 
 ::selection {
-  background: var(--color-amber-200);
+  background: color-mix(in oklab, var(--color-accent) 25%, transparent);
 }

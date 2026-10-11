@@ -53,7 +53,7 @@ export function RequirementsPanel({
       {requirements.length === 0 ? (
         <EmptyState>No requirements yet.</EmptyState>
       ) : (
-        <ul className="divide-y divide-stone-100">
+        <ul className="divide-y divide-line">
           {requirements.map((r) => (
             <li key={r.id} className="flex items-start justify-between gap-3 py-2.5 text-sm">
               <div>
