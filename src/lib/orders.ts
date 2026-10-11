@@ -31,8 +31,9 @@ export async function runAgentAndPropose(): Promise<Order[]> {
     store.getSettings(),
     store.spentLast7Days(),
   ]);
-  const listingsPerItem = await Promise.all(inventory.map((item) => getProducts(item.name)));
-  await store.upsertProducts(listingsPerItem.flat());
+  const listings = (await Promise.all(inventory.map((item) => getProducts(item.name)))).flat();
+  await store.upsertProducts(listings);
+  await store.retainProducts(listings.map((p) => p.id));
   // Read back from the store so distributor edits to claimed listings apply.
   const products = await store.listProducts();
 

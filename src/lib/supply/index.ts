@@ -26,8 +26,8 @@ export interface RefreshReport {
 export interface SupplySource {
   /** Listings for one item, e.g. "Flour", across all distributors. Served from cache when possible. */
   getProducts(itemName: string): Promise<Product[]>;
-  /** Re-scrapes every tracked item and returns the full catalog. */
-  refreshCatalog(): Promise<Product[]>;
+  /** Re-scrapes the given items (default: every tracked item) and returns the full catalog. */
+  refreshCatalog(itemNames?: string[]): Promise<Product[]>;
   /** P1: price-change monitoring + news search for these items, classified per PRD flow E. */
   refreshSignals(itemNames: string[]): Promise<Signal[]>;
   refreshReport(): RefreshReport;
@@ -41,8 +41,8 @@ export function getProducts(itemName: string): Promise<Product[]> {
   return source().getProducts(itemName);
 }
 
-export function refreshCatalog(): Promise<Product[]> {
-  return source().refreshCatalog();
+export function refreshCatalog(itemNames?: string[]): Promise<Product[]> {
+  return source().refreshCatalog(itemNames);
 }
 
 export function refreshSignals(itemNames: string[]): Promise<Signal[]> {
