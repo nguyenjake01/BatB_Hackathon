@@ -8,6 +8,7 @@
 // - The reorder rule (step 4) depends on lead time, so it is evaluated with the lead
 //   time of the listing the agent would buy at list prices.
 // - Out-of-stock listings are skipped whether or not the distributor claimed them.
+// - A distributor with several matching listings is negotiated with once, over its best one.
 
 import type { AutonomySettings, InventoryItem, Negotiation, Order, Product, Quote, Requirement, Signal } from "@/types";
 import { NotImplementedError } from "@/lib/config";
@@ -74,8 +75,6 @@ interface Draft {
   pick: Candidate;
   quote: Quote;
   lines: string[];
-  /** Every negotiation run for this item, for the transcript view. */
-  negotiationIds: string[];
 }
 
 export const llmAgent: PurchasingAgent = {
@@ -101,7 +100,7 @@ export const llmAgent: PurchasingAgent = {
     const createdAt = new Date().toISOString();
     const orders: Order[] = [];
     let committed = ctx.spentLast7Days;
-    for (const { plan, pick, quote, lines, negotiationIds } of drafts) {
+    for (const { plan, pick, quote, lines } of drafts) {
       const decision = decideAutonomy(pick.totalPrice, ctx.settings, committed);
       if (decision.autoPurchase) committed += pick.totalPrice;
 
@@ -118,7 +117,6 @@ export const llmAgent: PurchasingAgent = {
         reasoning: [...lines, decision.line].join("\n"),
         signalIds: plan.signal ? [plan.signal.id] : [],
         negotiationId: pick.negotiation?.id,
-        negotiationIds: negotiationIds.length > 0 ? negotiationIds : undefined,
         quoteId: quote.id,
         status: decision.autoPurchase ? "approved" : "proposed",
         autoPurchased: decision.autoPurchase,
@@ -160,8 +158,11 @@ async function planItem(
 
   // Step 2, quality notes: keep the listings that match the most keywords.
   const bestMatch = Math.max(...sized.map((c) => c.qualityMatches));
-  const candidates = plan.keywords.length === 0 || bestMatch === 0 ? sized : sized.filter((c) => c.qualityMatches === bestMatch);
-  const skippedForQuality = sized.filter((c) => !candidates.includes(c));
+  const qualityOk = plan.keywords.length === 0 || bestMatch === 0 ? sized : sized.filter((c) => c.qualityMatches === bestMatch);
+  const skippedForQuality = sized.filter((c) => !qualityOk.includes(c));
+  // One listing per distributor: the one the agent would buy from it at list prices. Each
+  // distributor has one agent, so this is one negotiation per distributor (step 7).
+  const candidates = [...Map.groupBy(qualityOk, (c) => c.product.distributorId).values()].map(pickBest);
 
   // Step 4: reorder when stock on arrival would be below the minimum.
   const likely = pickBest(candidates);
@@ -206,7 +207,7 @@ async function planItem(
     });
 
   const lines = explain(plan, pick, { open, walkedAway, skippedForQuality, due, stockOnArrival: stockOnArrivalFor(pick, item) });
-  return { draft: { plan, pick, quote, lines, negotiationIds: negotiations.map((n) => n.id) }, negotiations };
+  return { draft: { plan, pick, quote, lines }, negotiations };
 }
 
 function stockOnArrivalFor(c: Candidate, item: InventoryItem): number {
@@ -431,7 +432,7 @@ function explain(plan: Plan, pick: Candidate, ctx: ExplainContext): string[] {
   }
   if (ctx.walkedAway.length > 0) {
     lines.push(
-      `No deal with ${ctx.walkedAway.map((c) => c.product.distributorName).join(", ")}: ` +
+      `No deal with ${[...new Set(ctx.walkedAway.map((c) => c.product.distributorName))].join(", ")}: ` +
         `${ctx.walkedAway.length === 1 ? "its agent" : "their agents"} would not go low enough to beat the retail baseline or fit your budget.`,
     );
   }
