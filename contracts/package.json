@@ -1,0 +1,22 @@
+{
+  "name": "batb-purchase-log-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:local": "hardhat run scripts/deploy.ts",
+    "deploy:bsc-testnet": "hardhat run scripts/deploy.ts --network bscTestnet"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.7",
+    "@types/node": "^22.20.5",
+    "hardhat": "^3.19.0",
+    "typescript": "^5.9.3",
+    "viem": "^2.57.4"
+  }
+}
